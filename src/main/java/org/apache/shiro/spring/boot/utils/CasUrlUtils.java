@@ -18,8 +18,8 @@ package org.apache.shiro.spring.boot.utils;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 
 import org.apache.shiro.spring.boot.cas.CasClientProperties;
 import org.apache.shiro.web.util.WebUtils;

@@ -3,9 +3,9 @@ package org.apache.shiro.spring.boot.cas.filter;
 import java.io.IOException;
 import java.util.List;
 
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.authc.AuthenticationException;
@@ -53,7 +53,7 @@ public class CasAuthenticatingFilter extends AuthenticatingFilter {
 	}
 
 	/**
-     * Execute login by creating {@link #createToken(javax.servlet.ServletRequest, javax.servlet.ServletResponse) token} and logging subject
+     * Execute login by creating {@link #createToken(jakarta.servlet.ServletRequest, jakarta.servlet.ServletResponse) token} and logging subject
      * with this token.
      *
      * @param request the incoming request
