@@ -6,14 +6,14 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.7.0</version>
+		<version>3.1.12</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 
 	<groupId>io.github.hiwepy</groupId>
 	<artifactId>shiro-cas-spring-boot-starter</artifactId>
 	<description>Spring Boot Starter For Shiro With Cas</description>
-	<version>2.7.x.20241003.RELEASE</version>
+	<version>3.1.x.20260527-SNAPSHOT</version>
 	<name>${project.groupId}:${project.artifactId}</name>
 	<url>https://github.com/hiwepy/${project.artifactId}</url>
 	<packaging>jar</packaging>
@@ -380,8 +380,8 @@
 
 		<!-- Java Servlet API -->
 		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>javax.servlet-api</artifactId>
+			<groupId>jakarta.servlet</groupId>
+			<artifactId>jakarta.servlet-api</artifactId>
 			<optional>true</optional>
 		</dependency>
 
