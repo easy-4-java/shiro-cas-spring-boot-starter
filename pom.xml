@@ -12,7 +12,7 @@
     <groupId>io.github.easy4j</groupId>
     <artifactId>shiro-cas-spring-boot-starter</artifactId>
     <description>Spring Boot Starter For Shiro With Cas</description>
-    <version>4.0.x.20260527-SNAPSHOT</version>
+    <version>4.0.x.20260630-SNAPSHOT</version>
     <name>${project.groupId}:${project.artifactId}</name>
     <url>https://github.com/easy-4-java/${project.artifactId}</url>
     <packaging>jar</packaging>
@@ -402,6 +402,7 @@
     </profiles>
 
     <properties>
+        <java.version>21</java.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -414,7 +415,7 @@
         <maven-resources-plugin.version>3.1.0</maven-resources-plugin.version>
         <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
         <maven-nexus-staging-plugin.version>1.6.8</maven-nexus-staging-plugin.version>
-        <spring-boot-starter-shiro-biz.version>2.7.x.20241003.RELEASE</spring-boot-starter-shiro-biz.version>
+        <spring-boot-starter-shiro-biz.version>4.0.x.20260630-SNAPSHOT</spring-boot-starter-shiro-biz.version>
         <woodstox-stax2-api.version>4.1</woodstox-stax2-api.version>
         <woodstox-asl.version>4.4.1</woodstox-asl.version>
                 <commons-io.version>2.22.0</commons-io.version>
