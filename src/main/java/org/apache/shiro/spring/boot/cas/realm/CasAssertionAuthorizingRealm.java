@@ -18,7 +18,7 @@ package org.apache.shiro.spring.boot.cas.realm;
 import java.util.Map;
 import java.util.Objects;
 
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.collections4.MapUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
@@ -29,10 +29,10 @@ import org.apache.shiro.spring.boot.cas.exception.CasTicketFoundException;
 import org.apache.shiro.spring.boot.cas.token.CasAssertionAuthenticationToken;
 import org.apache.shiro.spring.boot.utils.CasTicketValidatorUtils;
 import org.apache.shiro.util.StringUtils;
-import org.jasig.cas.client.authentication.AttributePrincipal;
-import org.jasig.cas.client.util.AssertionHolder;
-import org.jasig.cas.client.validation.Assertion;
-import org.jasig.cas.client.validation.TicketValidator;
+import org.apereo.cas.client.authentication.AttributePrincipal;
+import org.apereo.cas.client.util.AssertionHolder;
+import org.apereo.cas.client.validation.Assertion;
+import org.apereo.cas.client.validation.TicketValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,8 +40,10 @@ import org.slf4j.LoggerFactory;
  * Cas Stateful AuthorizingRealm
  * @author [@Loong Wan](https://github.com/loong10k)
  */
-@Slf4j
+
 public class CasAssertionAuthorizingRealm extends AbstractAuthorizingRealm {
+
+	private static final Logger log = LoggerFactory.getLogger(CasAssertionAuthorizingRealm.class);
 
 	/**
 	 * This class from the CAS client is used to validate a service ticket on CAS server

@@ -16,7 +16,7 @@
 package org.apache.shiro.spring.boot.cas;
 
 import org.apache.shiro.spring.boot.utils.StringUtils;
-import org.jasig.cas.client.authentication.UrlPatternMatcherStrategy;
+import org.apereo.cas.client.authentication.UrlPatternMatcherStrategy;
 
 /**
  * URL pattern matcher strategy that checks if a URL contains any of the configured patterns.

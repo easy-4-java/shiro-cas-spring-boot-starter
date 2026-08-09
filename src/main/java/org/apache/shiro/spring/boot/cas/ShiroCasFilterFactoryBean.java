@@ -5,7 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import jakarta.servlet.Filter;
+import javax.servlet.Filter;
 
 import org.apache.shiro.biz.spring.ShiroFilterProxyFactoryBean;
 import org.apache.shiro.web.filter.AccessControlFilter;
@@ -30,11 +30,11 @@ public class ShiroCasFilterFactoryBean extends ShiroFilterProxyFactoryBean imple
 
 	public ShiroCasFilterFactoryBean() {
 	}
-	
+
 	protected boolean supports(Filter filter) {
 		return filter instanceof AccessControlFilter ||  filter instanceof LogoutFilter;
 	}
-	
+
 	// 过滤器链：实现对路径规则的拦截过滤
 	@Override
 	public Map<String, Filter> getFilters() {
@@ -47,8 +47,11 @@ public class ShiroCasFilterFactoryBean extends ShiroFilterProxyFactoryBean imple
 			Iterator<Entry<String, FilterRegistrationBean>> ite = beansOfType.entrySet().iterator();
 			while (ite.hasNext()) {
 				Entry<String, FilterRegistrationBean> entry = ite.next();
-				if (this.supports(entry.getValue().getFilter())) {
-					filters.put(entry.getKey(), entry.getValue().getFilter());
+				Object delegate = entry.getValue().getFilter();
+				// Unwrap JakartaFilterAdapter if present
+				Filter filter = unwrapFilter(delegate);
+				if (filter != null && this.supports(filter)) {
+					filters.put(entry.getKey(), filter);
 				}
 			}
 		}
@@ -57,6 +60,25 @@ public class ShiroCasFilterFactoryBean extends ShiroFilterProxyFactoryBean imple
 
 		return filters;
 
+	}
+
+	/**
+	 * Unwrap a filter from a JakartaFilterAdapter if needed.
+	 */
+	private Filter unwrapFilter(Object delegate) {
+		if (delegate instanceof Filter) {
+			return (Filter) delegate;
+		}
+		// Handle JakartaFilterAdapter wrapping javax.servlet.Filter
+		try {
+			java.lang.reflect.Method getDelegate = delegate.getClass().getMethod("getDelegate");
+			Object inner = getDelegate.invoke(delegate);
+			if (inner instanceof Filter) {
+				return (Filter) inner;
+			}
+		} catch (Exception ignored) {
+		}
+		return null;
 	}
 
 	@Override

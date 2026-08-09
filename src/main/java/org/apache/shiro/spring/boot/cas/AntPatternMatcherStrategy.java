@@ -17,7 +17,7 @@ package org.apache.shiro.spring.boot.cas;
 
 import org.apache.shiro.util.AntPathMatcher;
 import org.apache.shiro.util.StringUtils;
-import org.jasig.cas.client.authentication.UrlPatternMatcherStrategy;
+import org.apereo.cas.client.authentication.UrlPatternMatcherStrategy;
 
 public class AntPatternMatcherStrategy implements UrlPatternMatcherStrategy {
 

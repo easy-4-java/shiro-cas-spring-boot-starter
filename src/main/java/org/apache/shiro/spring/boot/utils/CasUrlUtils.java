@@ -18,12 +18,9 @@ package org.apache.shiro.spring.boot.utils;
 import java.net.MalformedURLException;
 import java.net.URL;
 
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
 
 import org.apache.shiro.spring.boot.cas.CasClientProperties;
-import org.apache.shiro.web.util.WebUtils;
-import org.jasig.cas.client.util.CommonUtils;
+import org.apereo.cas.client.util.CommonUtils;
 
 /**
  * Utility class for constructing CAS-related URLs (callback, redirect, login, logout).
@@ -91,12 +88,24 @@ public class CasUrlUtils {
 		return CommonUtils.constructRedirectUrl(casProperties.getCasServerLoginUrl(), casProperties.getServiceParameterName(), callbackUrl, casProperties.isRenew(), casProperties.isGateway());
 	}
 	
-	public static String constructServiceUrl(ServletRequest request, ServletResponse response, CasClientProperties casProperties) {
-		
-		return CommonUtils.constructServiceUrl(WebUtils.toHttp(request), WebUtils.toHttp(response), casProperties.getServerName(),
-				casProperties.getServerName(), casProperties.getServiceParameterName(),
-				casProperties.getArtifactParameterName(), casProperties.isEncodeServiceUrl());
-		
+	public static String constructServiceUrl(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response, CasClientProperties casProperties) {
+
+		String serviceUrl = casProperties.getServerName();
+		if (serviceUrl == null || serviceUrl.isEmpty()) {
+			serviceUrl = request.getRequestURL().toString();
+		}
+		String artifactParameter = casProperties.getArtifactParameterName();
+		if (artifactParameter != null && !artifactParameter.isEmpty()) {
+			int ticketIndex = serviceUrl.indexOf("?ticket=");
+			if (ticketIndex == -1) {
+				ticketIndex = serviceUrl.indexOf("&ticket=");
+			}
+			if (ticketIndex > 0) {
+				serviceUrl = serviceUrl.substring(0, ticketIndex);
+			}
+		}
+		return serviceUrl;
+
 	}
-	
+
 }

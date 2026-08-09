@@ -4,7 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.shiro.spring.boot.cas.CasClientProperties;
-import org.jasig.cas.client.Protocol;
+import org.apereo.cas.client.Protocol;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import lombok.Getter;
@@ -179,5 +179,13 @@ public class ShiroCasProperties  extends CasClientProperties{
 	 * http://localhost:8080/#/client?client_name=cas&target=/portal
 	 */
 	private String frontendUrl;
+
+	public CaMode getCaMode() {
+		return caMode;
+	}
+
+	public void setCaMode(CaMode caMode) {
+		this.caMode = caMode;
+	}
 
 }
