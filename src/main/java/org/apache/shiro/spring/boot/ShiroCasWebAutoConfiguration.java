@@ -12,6 +12,13 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Auto-configuration for Shiro CAS web authentication.
+ * <p>Registers CAS-specific subject factory and configuration when CAS is enabled.</p>
+ *
+ * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 1.0.0
+ */
 @Configuration
 @AutoConfigureBefore( name = {
 	"org.apache.shiro.spring.config.web.autoconfigure.ShiroWebAutoConfiguration",  // shiro-spring-boot-web-starter
@@ -22,7 +29,11 @@ import org.springframework.context.annotation.Configuration;
 public class ShiroCasWebAutoConfiguration extends AbstractShiroWebConfiguration implements ApplicationContextAware  {
 
 	private ApplicationContext applicationContext;
-	
+
+	/**
+	 * Creates the CAS subject factory.
+	 * @return the CAS subject factory
+	 */
 	@Bean
 	@Override
     protected SubjectFactory subjectFactory() {

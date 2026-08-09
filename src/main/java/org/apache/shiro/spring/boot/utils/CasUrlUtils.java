@@ -25,6 +25,12 @@ import org.apache.shiro.spring.boot.cas.CasClientProperties;
 import org.apache.shiro.web.util.WebUtils;
 import org.jasig.cas.client.util.CommonUtils;
 
+/**
+ * Utility class for constructing CAS-related URLs (callback, redirect, login, logout).
+ *
+ * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 1.0.0
+ */
 public class CasUrlUtils {
 
 	public static String constructCallbackUrl(String contextPath, String serverUrl) {

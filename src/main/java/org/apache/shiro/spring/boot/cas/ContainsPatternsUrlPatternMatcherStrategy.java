@@ -18,6 +18,12 @@ package org.apache.shiro.spring.boot.cas;
 import org.apache.shiro.spring.boot.utils.StringUtils;
 import org.jasig.cas.client.authentication.UrlPatternMatcherStrategy;
 
+/**
+ * URL pattern matcher strategy that checks if a URL contains any of the configured patterns.
+ *
+ * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 1.0.0
+ */
 public class ContainsPatternsUrlPatternMatcherStrategy implements UrlPatternMatcherStrategy {
 
     private String[] patterns;

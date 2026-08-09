@@ -17,6 +17,12 @@ package org.apache.shiro.spring.boot.cas.exception;
 
 import org.apache.shiro.authc.AuthenticationException;
 
+/**
+ * Exception thrown when CAS authentication fails.
+ *
+ * @author [@Loong Wan](https://github.com/loong10k)
+ * @since 1.0.0
+ */
 public class CasAuthenticationException extends AuthenticationException {
 
     public CasAuthenticationException() {
