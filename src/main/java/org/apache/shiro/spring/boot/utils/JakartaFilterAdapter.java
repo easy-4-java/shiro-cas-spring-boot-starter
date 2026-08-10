@@ -18,7 +18,7 @@ import java.lang.reflect.Proxy;
  * requires {@code jakarta.servlet.Filter} for filter registration. This adapter uses
  * reflection to delegate calls, avoiding direct type incompatibility.</p>
  *
- * @author [@Loong Wan](https://github.com/loong10k)
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
  * @since 1.0.0
  */
 public class JakartaFilterAdapter implements Filter {

@@ -25,7 +25,7 @@ import org.apereo.cas.client.util.CommonUtils;
 /**
  * Utility class for constructing CAS-related URLs (callback, redirect, login, logout).
  *
- * @author [@Loong Wan](https://github.com/loong10k)
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
  * @since 1.0.0
  */
 public class CasUrlUtils {

@@ -20,7 +20,7 @@ import org.apache.shiro.authc.AuthenticationException;
 /**
  * Exception thrown when CAS authentication fails.
  *
- * @author [@Loong Wan](https://github.com/loong10k)
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
  * @since 1.0.0
  */
 public class CasAuthenticationException extends AuthenticationException {

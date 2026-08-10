@@ -21,7 +21,7 @@ import org.apereo.cas.client.authentication.UrlPatternMatcherStrategy;
 /**
  * URL pattern matcher strategy that checks if a URL contains any of the configured patterns.
  *
- * @author [@Loong Wan](https://github.com/loong10k)
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
  * @since 1.0.0
  */
 public class ContainsPatternsUrlPatternMatcherStrategy implements UrlPatternMatcherStrategy {

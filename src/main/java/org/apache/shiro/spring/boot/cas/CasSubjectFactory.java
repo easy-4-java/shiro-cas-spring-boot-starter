@@ -25,7 +25,7 @@ import org.apache.shiro.web.mgt.DefaultWebSubjectFactory;
  * Subject factory for CAS authentication.
  * <p>Handles remember-me mode by adjusting the authenticated flag based on the CAS assertion.</p>
  *
- * @author [@Loong Wan](https://github.com/loong10k)
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
  * @since 1.0.0
  */
 public class CasSubjectFactory extends DefaultWebSubjectFactory {
