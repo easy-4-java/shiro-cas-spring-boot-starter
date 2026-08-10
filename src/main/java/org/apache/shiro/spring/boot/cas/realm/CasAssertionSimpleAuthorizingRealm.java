@@ -46,7 +46,7 @@ import org.jasig.cas.client.validation.TicketValidator;
 
 /**
  * Cas Stateless AuthorizingRealm
- * @author [@Loong Wan](https://github.com/loong10k)
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
  */
 @Slf4j
 public class CasAssertionSimpleAuthorizingRealm extends AbstractAuthorizingRealm {
