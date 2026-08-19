@@ -19,23 +19,44 @@ import org.springframework.util.ObjectUtils;
 
 /**
  * @author <a href="https://github.com/loong10k">Loong Wan</a>
+ * @since 1.0.0
  */
 public class ShiroCasFilterFactoryBean extends ShiroFilterProxyFactoryBean implements ApplicationContextAware {
 
 	private ApplicationContext applicationContext;
 
+	/**
+	 * Returns the application context.
+	 *
+	 * @return the application context
+	 */
 	public ApplicationContext getApplicationContext() {
 		return applicationContext;
 	}
 
+	/**
+	 * Constructs a new shiro cas filter factory bean instance.
+	 *
+	 */
 	public ShiroCasFilterFactoryBean() {
 	}
 
+	/**
+	 * Determines whether supports.
+	 *
+	 * @param filter the filter
+	 * @return the result
+	 */
 	protected boolean supports(Filter filter) {
 		return filter instanceof AccessControlFilter ||  filter instanceof LogoutFilter;
 	}
 
 	// 过滤器链：实现对路径规则的拦截过滤
+	/**
+	 * Returns the filters.
+	 *
+	 * @return the filters
+	 */
 	@Override
 	public Map<String, Filter> getFilters() {
 
@@ -81,6 +102,12 @@ public class ShiroCasFilterFactoryBean extends ShiroFilterProxyFactoryBean imple
 		return null;
 	}
 
+	/**
+	 * Sets the application context.
+	 *
+	 * @param applicationContext the application context
+	 * @throws BeansException if an error occurs
+	 */
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 		this.applicationContext = applicationContext;

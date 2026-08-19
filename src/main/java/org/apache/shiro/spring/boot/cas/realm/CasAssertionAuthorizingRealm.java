@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Cas Stateful AuthorizingRealm
  * @author <a href="https://github.com/loong10k">Loong Wan</a>
+ * @since 1.0.0
  */
 
 public class CasAssertionAuthorizingRealm extends AbstractAuthorizingRealm {
@@ -51,17 +52,31 @@ public class CasAssertionAuthorizingRealm extends AbstractAuthorizingRealm {
 	private TicketValidator ticketValidator;
     private ShiroCasProperties casProperties;
 
+    /**
+     * Constructs a new cas assertion authorizing realm instance.
+     *
+     * @param casProperties the cas properties
+     */
     public CasAssertionAuthorizingRealm(ShiroCasProperties casProperties) {
         setAuthenticationTokenClass(CasAssertionAuthenticationToken.class);
         setCasProperties(casProperties);
     }
 
+    /**
+     * on Init.
+     *
+     */
     @Override
     protected void onInit() {
         super.onInit();
         ensureTicketValidator();
     }
 
+    /**
+     * ensure Ticket Validator.
+     *
+     * @return the result
+     */
     protected TicketValidator ensureTicketValidator() {
         if (this.ticketValidator == null) {
             this.ticketValidator = CasTicketValidatorUtils.createTicketValidator(casProperties);
@@ -131,10 +146,20 @@ public class CasAssertionAuthorizingRealm extends AbstractAuthorizingRealm {
 		}
     }
 
+	/**
+	 * Returns the cas properties.
+	 *
+	 * @return the cas properties
+	 */
 	public ShiroCasProperties getCasProperties() {
 		return casProperties;
 	}
 
+	/**
+	 * Sets the cas properties.
+	 *
+	 * @param casProperties the cas properties
+	 */
 	public void setCasProperties(ShiroCasProperties casProperties) {
 		this.casProperties = casProperties;
 	}

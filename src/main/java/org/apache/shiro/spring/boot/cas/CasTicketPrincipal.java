@@ -22,6 +22,7 @@ import org.apache.shiro.biz.authz.principal.ShiroPrincipal;
 /**
  * TODO
  * @author <a href="https://github.com/loong10k">Loong Wan</a>
+ * @since 1.0.0
  */
 @SuppressWarnings("serial")
 public class CasTicketPrincipal extends ShiroPrincipal {
@@ -31,18 +32,38 @@ public class CasTicketPrincipal extends ShiroPrincipal {
 	/** 其他参数 */
 	private Map<String, Object> attrs;
 
+	/**
+	 * Returns the ticket.
+	 *
+	 * @return the ticket
+	 */
 	public String getTicket() {
 		return ticket;
 	}
 
+	/**
+	 * Sets the ticket.
+	 *
+	 * @param ticket the ticket
+	 */
 	public void setTicket(String ticket) {
 		this.ticket = ticket;
 	}
 
+	/**
+	 * Returns the attrs.
+	 *
+	 * @return the attrs
+	 */
 	public Map<String, Object> getAttrs() {
 		return attrs;
 	}
 
+	/**
+	 * Sets the attrs.
+	 *
+	 * @param attrs the attrs
+	 */
 	public void setAttrs(Map<String, Object> attrs) {
 		this.attrs = attrs;
 	}

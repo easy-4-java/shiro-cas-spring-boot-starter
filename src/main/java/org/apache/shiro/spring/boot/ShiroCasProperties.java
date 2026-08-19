@@ -11,6 +11,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+/**
+ * <p>Configuration properties.</p>
+ *
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
+ * @since 1.0.0
+ */
 @ConfigurationProperties(ShiroCasProperties.PREFIX)
 @Getter
 @Setter
@@ -180,10 +186,20 @@ public class ShiroCasProperties  extends CasClientProperties{
 	 */
 	private String frontendUrl;
 
+	/**
+	 * Returns the ca mode.
+	 *
+	 * @return the ca mode
+	 */
 	public CaMode getCaMode() {
 		return caMode;
 	}
 
+	/**
+	 * Sets the ca mode.
+	 *
+	 * @param caMode the ca mode
+	 */
 	public void setCaMode(CaMode caMode) {
 		this.caMode = caMode;
 	}

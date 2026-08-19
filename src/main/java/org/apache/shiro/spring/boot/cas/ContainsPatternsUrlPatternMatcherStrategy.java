@@ -28,6 +28,12 @@ public class ContainsPatternsUrlPatternMatcherStrategy implements UrlPatternMatc
 
     private String[] patterns;
 
+	/**
+	 * Determines whether matches.
+	 *
+	 * @param url the url
+	 * @return the result
+	 */
 	@Override
 	public boolean matches(String url) {
 		for (String pattern : patterns) {
@@ -38,6 +44,11 @@ public class ContainsPatternsUrlPatternMatcherStrategy implements UrlPatternMatc
 		return false;
 	}
 
+	/**
+	 * Sets the pattern.
+	 *
+	 * @param pattern the pattern
+	 */
 	@Override
 	public void setPattern(String pattern) {
 		this.patterns = StringUtils.tokenizeToStringArray(pattern);

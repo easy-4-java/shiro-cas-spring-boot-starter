@@ -23,6 +23,12 @@ import org.apereo.cas.client.Protocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * <p>Filter for Cas Authenticating.</p>
+ *
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
+ * @since 1.0.0
+ */
 public class CasAuthenticatingFilter extends AuthenticatingFilter {
 
     private static final Logger log = LoggerFactory.getLogger(CasAuthenticatingFilter.class);
@@ -40,6 +46,14 @@ public class CasAuthenticatingFilter extends AuthenticatingFilter {
 	/** Authentication Failure Handler */
 	private List<AuthenticationFailureHandler> failureHandlers;
 
+	/**
+	 * create Token.
+	 *
+	 * @param request the request
+	 * @param response the response
+	 * @return the result
+	 * @throws Exception if an error occurs
+	 */
 	@Override
 	protected AuthenticationToken createToken(ServletRequest request, ServletResponse response) throws Exception {
 		HttpServletRequest httpRequest = WebUtils.toHttp(request);
@@ -194,30 +208,65 @@ public class CasAuthenticatingFilter extends AuthenticatingFilter {
 		return false;
     }
 
+    /**
+     * Sets the failure url.
+     *
+     * @param failureUrl the failure url
+     */
     public void setFailureUrl(String failureUrl) {
         this.failureUrl = failureUrl;
     }
 
+	/**
+	 * Returns the login listeners.
+	 *
+	 * @return the login listeners
+	 */
 	public List<LoginListener> getLoginListeners() {
 		return loginListeners;
 	}
 
+	/**
+	 * Sets the login listeners.
+	 *
+	 * @param loginListeners the login listeners
+	 */
 	public void setLoginListeners(List<LoginListener> loginListeners) {
 		this.loginListeners = loginListeners;
 	}
 
+    /**
+     * Returns the success handlers.
+     *
+     * @return the success handlers
+     */
     public List<AuthenticationSuccessHandler> getSuccessHandlers() {
 		return successHandlers;
 	}
 
+	/**
+	 * Sets the success handlers.
+	 *
+	 * @param successHandlers the success handlers
+	 */
 	public void setSuccessHandlers(List<AuthenticationSuccessHandler> successHandlers) {
 		this.successHandlers = successHandlers;
 	}
 
+	/**
+	 * Returns the failure handlers.
+	 *
+	 * @return the failure handlers
+	 */
 	public List<AuthenticationFailureHandler> getFailureHandlers() {
 		return failureHandlers;
 	}
 
+	/**
+	 * Sets the failure handlers.
+	 *
+	 * @param failureHandlers the failure handlers
+	 */
 	public void setFailureHandlers(List<AuthenticationFailureHandler> failureHandlers) {
 		this.failureHandlers = failureHandlers;
 	}

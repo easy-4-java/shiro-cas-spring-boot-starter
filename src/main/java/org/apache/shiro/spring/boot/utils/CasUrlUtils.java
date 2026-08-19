@@ -30,6 +30,13 @@ import org.apereo.cas.client.util.CommonUtils;
  */
 public class CasUrlUtils {
 
+	/**
+	 * construct Callback URL.
+	 *
+	 * @param contextPath the context path
+	 * @param serverUrl the server url
+	 * @return the result
+	 */
 	public static String constructCallbackUrl(String contextPath, String serverUrl) {
 		contextPath = StringUtils.hasText(contextPath) ? contextPath : "/";
 		if (contextPath.endsWith("/")) {
@@ -39,6 +46,14 @@ public class CasUrlUtils {
 		return callbackUrlBuilder.toString();
 	}
 	
+	/**
+	 * construct Callback URL.
+	 *
+	 * @param casProperties the cas properties
+	 * @param contextPath the context path
+	 * @param serverUrl the server url
+	 * @return the result
+	 */
 	public static String constructCallbackUrl(CasClientProperties casProperties, String contextPath, String serverUrl) {
 
 		contextPath = StringUtils.hasText(contextPath) ? contextPath : "/";
@@ -64,6 +79,15 @@ public class CasUrlUtils {
 
 	}
 	
+	/**
+	 * construct Redirect URL.
+	 *
+	 * @param casProperties the cas properties
+	 * @param casServerPath the cas server path
+	 * @param contextPath the context path
+	 * @param serverUrl the server url
+	 * @return the result
+	 */
 	public static String constructRedirectUrl(CasClientProperties casProperties, String casServerPath, String contextPath, String serverUrl)  {
 
 		StringBuilder casRedirectUrl = new StringBuilder(casProperties.getCasServerUrlPrefix());
@@ -78,16 +102,40 @@ public class CasUrlUtils {
 		
 	}
 	
+	/**
+	 * construct Logout Redirect URL.
+	 *
+	 * @param casProperties the cas properties
+	 * @param contextPath the context path
+	 * @param serverUrl the server url
+	 * @return the result
+	 */
 	public static String constructLogoutRedirectUrl(CasClientProperties casProperties, String contextPath, String serverUrl){
 		String callbackUrl = CasUrlUtils.constructCallbackUrl(casProperties, contextPath, serverUrl);
 		return CommonUtils.constructRedirectUrl(casProperties.getCasServerLogoutUrl(), casProperties.getServiceParameterName(), callbackUrl, casProperties.isRenew(), casProperties.isGateway());
 	}
 	
+	/**
+	 * construct Login Redirect URL.
+	 *
+	 * @param casProperties the cas properties
+	 * @param contextPath the context path
+	 * @param serverUrl the server url
+	 * @return the result
+	 */
 	public static String constructLoginRedirectUrl(CasClientProperties casProperties, String contextPath, String serverUrl){
 		String callbackUrl = CasUrlUtils.constructCallbackUrl(casProperties, contextPath, serverUrl);
 		return CommonUtils.constructRedirectUrl(casProperties.getCasServerLoginUrl(), casProperties.getServiceParameterName(), callbackUrl, casProperties.isRenew(), casProperties.isGateway());
 	}
 	
+	/**
+	 * construct Service URL.
+	 *
+	 * @param request the request
+	 * @param response the response
+	 * @param casProperties the cas properties
+	 * @return the result
+	 */
 	public static String constructServiceUrl(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response, CasClientProperties casProperties) {
 
 		String serviceUrl = casProperties.getServerName();

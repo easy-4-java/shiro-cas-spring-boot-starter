@@ -15,6 +15,12 @@
  */
 package org.apache.shiro.spring.boot.utils;
 
+/**
+ * <p>Utility methods for String.</p>
+ *
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
+ * @since 1.0.0
+ */
 public class StringUtils extends org.apache.shiro.util.StringUtils{
 
 	/**
@@ -23,6 +29,12 @@ public class StringUtils extends org.apache.shiro.util.StringUtils{
 	 */
 	public static String CONFIG_LOCATION_DELIMITERS = ",; \t\n";
 	
+	/**
+	 * tokenize To String Array.
+	 *
+	 * @param str the str
+	 * @return the result
+	 */
 	public static String[] tokenizeToStringArray(String str) {
 		return tokenizeToStringArray(str, CONFIG_LOCATION_DELIMITERS);
 	}

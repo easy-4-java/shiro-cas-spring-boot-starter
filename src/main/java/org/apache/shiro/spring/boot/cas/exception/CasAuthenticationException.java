@@ -25,18 +25,38 @@ import org.apache.shiro.authc.AuthenticationException;
  */
 public class CasAuthenticationException extends AuthenticationException {
 
+    /**
+     * Constructs a new cas authentication exception instance.
+     *
+     */
     public CasAuthenticationException() {
         super();
     }
 
+    /**
+     * Constructs a new cas authentication exception instance.
+     *
+     * @param message the message
+     */
     public CasAuthenticationException(String message) {
         super(message);
     }
 
+    /**
+     * Constructs a new cas authentication exception instance.
+     *
+     * @param cause the cause
+     */
     public CasAuthenticationException(Throwable cause) {
         super(cause);
     }
 
+    /**
+     * Constructs a new cas authentication exception instance.
+     *
+     * @param message the message
+     * @param cause the cause
+     */
     public CasAuthenticationException(String message, Throwable cause) {
         super(message, cause);
     }

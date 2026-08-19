@@ -21,6 +21,8 @@ import org.apache.commons.lang3.StringUtils;
 
 /**
  * http://blog.csdn.net/caoshuming_500/article/details/20952329
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
+ * @since 1.0.0
  */
 public class RemoteAddrUtils {
 

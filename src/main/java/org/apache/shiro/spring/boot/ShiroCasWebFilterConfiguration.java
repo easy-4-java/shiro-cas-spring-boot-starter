@@ -63,6 +63,12 @@ import org.springframework.util.StringUtils;
 	"org.apache.shiro.spring.config.web.autoconfigure.ShiroWebFilterConfiguration",
 	"org.apache.shiro.spring.boot.ShiroBizWebFilterConfiguration"
 })
+/**
+ * <p>Configuration properties.</p>
+ *
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
+ * @since 1.0.0
+ */
 @ConditionalOnProperty(prefix = ShiroCasProperties.PREFIX, value = "enabled", havingValue = "true")
 @ConditionalOnClass({AuthenticationFilter.class})
 @EnableConfigurationProperties({ ShiroCasProperties.class, ShiroBizProperties.class })
@@ -293,6 +299,15 @@ public class ShiroCasWebFilterConfiguration extends AbstractShiroWebFilterConfig
 	    return registration;
 	}
 
+	/**
+	 * cas Filter.
+	 *
+	 * @param loginListenerProvider the login listener provider
+	 * @param successHandlerProvider the success handler provider
+	 * @param failureHandlerProvider the failure handler provider
+	 * @param properties the properties
+	 * @return the result
+	 */
 	@Bean("cas")
 	@ConditionalOnMissingBean(name = "cas")
 	@SuppressWarnings("unchecked")
@@ -315,6 +330,13 @@ public class ShiroCasWebFilterConfiguration extends AbstractShiroWebFilterConfig
 	    return registration;
 	}
 
+	/**
+	 * cas Realm.
+	 *
+	 * @param repositoryProvider the repository provider
+	 * @param realmsListenerProvider the realms listener provider
+	 * @return the result
+	 */
 	@Bean
 	public Realm casRealm(ObjectProvider<ShiroPrincipalRepository> repositoryProvider,
 						  ObjectProvider<AuthorizingRealmListener> realmsListenerProvider) {
@@ -338,6 +360,11 @@ public class ShiroCasWebFilterConfiguration extends AbstractShiroWebFilterConfig
 		return casRealm;
 	}
 
+    /**
+     * shiro Filter Factory Bean.
+     *
+     * @return the result
+     */
 	@Bean
     @Override
     protected ShiroFilterFactoryBean shiroFilterFactoryBean() {
@@ -361,6 +388,12 @@ public class ShiroCasWebFilterConfiguration extends AbstractShiroWebFilterConfig
 
     }
 
+	/**
+	 * filter Shiro Filter Registration Bean.
+	 *
+	 * @return the result
+	 * @throws Exception if an error occurs
+	 */
 	@Bean(name = "filterShiroFilterRegistrationBean")
 	@ConditionalOnMissingBean
 	@SuppressWarnings("unchecked")

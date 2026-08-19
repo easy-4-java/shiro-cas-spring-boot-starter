@@ -57,6 +57,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Cas Stateless AuthorizingRealm
  * @author <a href="https://github.com/loong10k">Loong Wan</a>
+ * @since 1.0.0
  */
 
 public class CasAssertionSimpleAuthorizingRealm extends AbstractAuthorizingRealm {
@@ -89,17 +90,31 @@ public class CasAssertionSimpleAuthorizingRealm extends AbstractAuthorizingRealm
      */
     private String permissionAttributeNames;
 
+    /**
+     * Constructs a new cas assertion simple authorizing realm instance.
+     *
+     * @param casProperties the cas properties
+     */
     public CasAssertionSimpleAuthorizingRealm(ShiroCasProperties casProperties) {
         setAuthenticationTokenClass(CasAssertionAuthenticationToken.class);
         setCasProperties(casProperties);
     }
 
+    /**
+     * on Init.
+     *
+     */
     @Override
     protected void onInit() {
         super.onInit();
         ensureTicketValidator();
     }
 
+    /**
+     * ensure Ticket Validator.
+     *
+     * @return the result
+     */
     protected TicketValidator ensureTicketValidator() {
         if (this.ticketValidator == null) {
         	this.ticketValidator = CasTicketValidatorUtils.createTicketValidator(casProperties);
@@ -256,42 +271,92 @@ public class CasAssertionSimpleAuthorizingRealm extends AbstractAuthorizingRealm
         }
     }
 
+    /**
+     * Returns the default roles.
+     *
+     * @return the default roles
+     */
     public String getDefaultRoles() {
         return defaultRoles;
     }
 
+    /**
+     * Sets the default roles.
+     *
+     * @param defaultRoles the default roles
+     */
     public void setDefaultRoles(String defaultRoles) {
         this.defaultRoles = defaultRoles;
     }
 
+    /**
+     * Returns the default permissions.
+     *
+     * @return the default permissions
+     */
     public String getDefaultPermissions() {
         return defaultPermissions;
     }
 
+    /**
+     * Sets the default permissions.
+     *
+     * @param defaultPermissions the default permissions
+     */
     public void setDefaultPermissions(String defaultPermissions) {
         this.defaultPermissions = defaultPermissions;
     }
 
+    /**
+     * Returns the role attribute names.
+     *
+     * @return the role attribute names
+     */
     public String getRoleAttributeNames() {
         return roleAttributeNames;
     }
 
+    /**
+     * Sets the role attribute names.
+     *
+     * @param roleAttributeNames the role attribute names
+     */
     public void setRoleAttributeNames(String roleAttributeNames) {
         this.roleAttributeNames = roleAttributeNames;
     }
 
+    /**
+     * Returns the permission attribute names.
+     *
+     * @return the permission attribute names
+     */
     public String getPermissionAttributeNames() {
         return permissionAttributeNames;
     }
 
+    /**
+     * Sets the permission attribute names.
+     *
+     * @param permissionAttributeNames the permission attribute names
+     */
     public void setPermissionAttributeNames(String permissionAttributeNames) {
         this.permissionAttributeNames = permissionAttributeNames;
     }
 
+	/**
+	 * Returns the cas properties.
+	 *
+	 * @return the cas properties
+	 */
 	public ShiroCasProperties getCasProperties() {
 		return casProperties;
 	}
 
+	/**
+	 * Sets the cas properties.
+	 *
+	 * @param casProperties the cas properties
+	 */
 	public void setCasProperties(ShiroCasProperties casProperties) {
 		this.casProperties = casProperties;
 	}

@@ -36,6 +36,12 @@ public class JakartaFilterAdapter implements Filter {
         this.isJakarta = implementsInterface(delegate, "jakarta.servlet.Filter");
     }
 
+    /**
+     * init.
+     *
+     * @param filterConfig the filter config
+     * @throws ServletException if an error occurs
+     */
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         try {
@@ -49,6 +55,13 @@ public class JakartaFilterAdapter implements Filter {
         }
     }
 
+    /**
+     * do Filter.
+     *
+     * @param request the request
+     * @param response the response
+     * @param chain the chain
+     */
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
@@ -63,6 +76,10 @@ public class JakartaFilterAdapter implements Filter {
         }
     }
 
+    /**
+     * destroy.
+     *
+     */
     @Override
     public void destroy() {
         try {
@@ -137,6 +154,15 @@ public class JakartaFilterAdapter implements Filter {
             this.target = target;
         }
 
+        /**
+         * invoke.
+         *
+         * @param proxy the proxy
+         * @param method the method
+         * @param args the args
+         * @return the result
+         * @throws Throwable if an error occurs
+         */
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             Method targetMethod = target.getClass().getMethod(method.getName(), method.getParameterTypes());

@@ -43,6 +43,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
+/**
+ * <p>Utility methods for Cas Ticket Validator.</p>
+ *
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
+ * @since 1.0.0
+ */
 public class CasTicketValidatorUtils {
 
 	protected final static Logger logger = LoggerFactory.getLogger(CasTicketValidatorUtils.class);
@@ -73,6 +79,12 @@ public class CasTicketValidatorUtils {
         }
 	}
 	
+    /**
+     * build S A M L Ticket Validator.
+     *
+     * @param casProperties the cas properties
+     * @return the result
+     */
     protected static TicketValidator buildSAMLTicketValidator(final ShiroCasProperties casProperties) {
         final Saml11TicketValidator saml11TicketValidator = new Saml11TicketValidator(casProperties.getCasServerUrlPrefix());
         saml11TicketValidator.setTolerance(casProperties.getTolerance());
@@ -80,6 +92,12 @@ public class CasTicketValidatorUtils {
         return saml11TicketValidator;
     }
 
+    /**
+     * build Cas30 Ticket Validator.
+     *
+     * @param casProperties the cas properties
+     * @return the result
+     */
     protected static TicketValidator buildCas30TicketValidator(final ShiroCasProperties casProperties) {
         
         final boolean allowAnyProxy = casProperties.isAcceptAnyProxy();
@@ -112,6 +130,12 @@ public class CasTicketValidatorUtils {
         
     }
 
+    /**
+     * build Cas20 Ticket Validator.
+     *
+     * @param casProperties the cas properties
+     * @return the result
+     */
     protected static TicketValidator buildCas20TicketValidator(final ShiroCasProperties casProperties) {
         
         final boolean allowAnyProxy = casProperties.isAcceptAnyProxy();
@@ -143,12 +167,26 @@ public class CasTicketValidatorUtils {
         return validator;
     }
 
+    /**
+     * build Cas10 Ticket Validator.
+     *
+     * @param casProperties the cas properties
+     * @return the result
+     */
     protected static TicketValidator buildCas10TicketValidator(final ShiroCasProperties casProperties) {
         final Cas10TicketValidator cas10TicketValidator = new Cas10TicketValidator(casProperties.getCasServerUrlPrefix());
         cas10TicketValidator.setEncoding(casProperties.getEncoding());
         return cas10TicketValidator;
     }
 	
+	/**
+	 * create New Ticket Validator.
+	 *
+	 * @param ticketValidatorClass the ticket validator class
+	 * @param casServerUrlPrefix the cas server url prefix
+	 * @param clazz the clazz
+	 * @return the result
+	 */
 	@SuppressWarnings("unchecked")
 	protected static <T> T createNewTicketValidator(final Class<? extends Cas20ServiceTicketValidator> ticketValidatorClass,
 			final String casServerUrlPrefix, final Class<T> clazz) {

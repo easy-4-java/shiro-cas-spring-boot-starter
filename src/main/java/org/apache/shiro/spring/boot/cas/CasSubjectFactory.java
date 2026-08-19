@@ -30,6 +30,12 @@ import org.apache.shiro.web.mgt.DefaultWebSubjectFactory;
  */
 public class CasSubjectFactory extends DefaultWebSubjectFactory {
 
+    /**
+     * create Subject.
+     *
+     * @param context the context
+     * @return the result
+     */
     @Override
     public Subject createSubject(SubjectContext context) {
 

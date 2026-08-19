@@ -17,6 +17,12 @@ package org.apache.shiro.spring.boot.cas.exception;
 
 import org.apache.shiro.authc.AuthenticationException;
 
+/**
+ * <p>Exception for Cas Ticket Found.</p>
+ *
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
+ * @since 1.0.0
+ */
 public class CasTicketFoundException extends AuthenticationException {
 
     /**
@@ -24,18 +30,38 @@ public class CasTicketFoundException extends AuthenticationException {
      */
     private static final long serialVersionUID = 5804347841925337928L;
 
+    /**
+     * Constructs a new cas ticket found exception instance.
+     *
+     */
     public CasTicketFoundException() {
         super();
     }
 
+    /**
+     * Constructs a new cas ticket found exception instance.
+     *
+     * @param message the message
+     * @param cause the cause
+     */
     public CasTicketFoundException(String message, Throwable cause) {
         super(message, cause);
     }
 
+    /**
+     * Constructs a new cas ticket found exception instance.
+     *
+     * @param message the message
+     */
     public CasTicketFoundException(String message) {
         super(message);
     }
 
+    /**
+     * Constructs a new cas ticket found exception instance.
+     *
+     * @param cause the cause
+     */
     public CasTicketFoundException(Throwable cause) {
         super(cause);
     }

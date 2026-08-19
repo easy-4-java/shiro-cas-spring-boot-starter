@@ -19,6 +19,12 @@ import org.apache.shiro.util.AntPathMatcher;
 import org.apache.shiro.util.StringUtils;
 import org.apereo.cas.client.authentication.UrlPatternMatcherStrategy;
 
+/**
+ * <p>Ant Pattern Matcher Strategy.</p>
+ *
+ * @author <a href="https://github.com/loong10k">Loong Wan</a>
+ * @since 1.0.0
+ */
 public class AntPatternMatcherStrategy implements UrlPatternMatcherStrategy {
 
 	/**
@@ -29,6 +35,12 @@ public class AntPatternMatcherStrategy implements UrlPatternMatcherStrategy {
 	private final AntPathMatcher matcher = new AntPathMatcher();
 	private String[] patterns;
 
+	/**
+	 * Determines whether matches.
+	 *
+	 * @param url the url
+	 * @return the result
+	 */
 	@Override
 	public boolean matches(String url) {
 		for (String pattern : patterns) {
@@ -39,6 +51,11 @@ public class AntPatternMatcherStrategy implements UrlPatternMatcherStrategy {
 		return false;
 	}
 
+	/**
+	 * Sets the pattern.
+	 *
+	 * @param pattern the pattern
+	 */
 	@Override
 	public void setPattern(String pattern) {
 		this.patterns = StringUtils.tokenizeToStringArray(pattern, CONFIG_LOCATION_DELIMITERS);
