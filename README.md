@@ -22,7 +22,7 @@
 ---
 
 > **Current Version**：`2.0.1-SNAPSHOT`<br>
-> **JDK Baseline**：`17`<br>
+> **JDK Baseline**：`8`<br>
 > **Group ID**：`io.github.easy4j`<br>
 > **Artifact ID**：`shiro-cas-spring-boot-starter`<br>
 > **License**：Apache License 2.0<br>
@@ -36,7 +36,7 @@
 | Type | Spring Boot Starter |
 | Consumers | Spring Boot applications using shiro-cas |
 | Core Capabilities | auto-configuration, property binding, ready-to-use beans for shiro-cas |
-| JDK | `17` |
+| JDK | `8` |
 | Coordinates | `io.github.easy4j:shiro-cas-spring-boot-starter:2.0.1-SNAPSHOT` |
 | Config Prefix | `shiro.cas` |
 
@@ -52,8 +52,8 @@
 
 | Dependency | Minimum | Evidence |
 |---|---:|---|
-| JDK | `17` | `pom.xml` |
-| Spring Boot | `2.6.0` | `pom.xml` parent |
+| JDK | `8` | `pom.xml` |
+| Spring Boot | `2.6.15` | `pom.xml` parent |
 | Maven | `3.6+` | Maven Enforcer |
 
 ## 4. Auto-configuration
@@ -80,6 +80,40 @@ Auto-configuration registration:
 ```
 
 No additional easy4j component dependencies.
+
+### Boot 2.6 application dependency versions
+
+The `main` line uses Spring Boot 2.6.15 and Java 8. The application POM controls dependency management for its runtime tree. In an application that inherits `spring-boot-starter-parent:2.6.15`, merge these entries into the existing `properties` and `dependencyManagement` sections to select the versions tested with this starter.
+
+```xml
+<properties>
+    <spring-framework.version>5.3.39</spring-framework.version>
+    <jackson-bom.version>2.21.8</jackson-bom.version>
+    <snakeyaml.version>1.33</snakeyaml.version>
+    <commons-lang3.version>3.22.0</commons-lang3.version>
+</properties>
+
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>1.11.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>33.7.2-jre</version>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+```
+
+Check the effective dependency tree from the application directory. Confirm that the runtime tree uses the Bouncy Castle `jdk18on` modules at 1.87. Continue scanning the application runtime for advisories that remain on this maintenance line.
+
+```bash
+mvn dependency:tree -Dscope=runtime
+```
 
 ## 6. Quick Start
 

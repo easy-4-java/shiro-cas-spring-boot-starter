@@ -22,7 +22,7 @@
 ---
 
 > **当前版本**：`2.0.1-SNAPSHOT`<br>
-> **JDK 基线**：`17`<br>
+> **JDK 基线**：`8`<br>
 > **Group ID**：`io.github.easy4j`<br>
 > **Artifact ID**：`shiro-cas-spring-boot-starter`<br>
 > **许可证**：Apache License 2.0<br>
@@ -36,7 +36,7 @@
 | 类型 | Spring Boot Starter |
 | 消费方 | 使用 shiro-cas 的 Spring Boot 应用 |
 | 核心能力 | 自动装配、属性绑定、开箱即用的 shiro-cas Bean |
-| JDK | `17` |
+| JDK | `8` |
 | 坐标 | `io.github.easy4j:shiro-cas-spring-boot-starter:2.0.1-SNAPSHOT` |
 | 配置前缀 | `shiro.cas` |
 
@@ -52,8 +52,8 @@
 
 | 依赖 | 最低版本 | 证据来源 |
 |---|---:|---|
-| JDK | `17` | `pom.xml` |
-| Spring Boot | `2.6.0` | `pom.xml` parent |
+| JDK | `8` | `pom.xml` |
+| Spring Boot | `2.6.15` | `pom.xml` parent |
 | Maven | `3.6+` | Maven Enforcer |
 
 ## 4. 自动装配
@@ -80,6 +80,40 @@ Starter 自动装配以下 Bean：
 ```
 
 无其他 easy4j 组件依赖。
+
+### Boot 2.6 应用依赖版本
+
+`main` 使用 Spring Boot 2.6.15 和 Java 8。运行时依赖版本以应用 POM 的依赖管理为准。应用继承 `spring-boot-starter-parent:2.6.15` 时，将以下条目合入现有的 `properties` 和 `dependencyManagement`，即可使用该 Starter 已验证的依赖版本。
+
+```xml
+<properties>
+    <spring-framework.version>5.3.39</spring-framework.version>
+    <jackson-bom.version>2.21.8</jackson-bom.version>
+    <snakeyaml.version>1.33</snakeyaml.version>
+    <commons-lang3.version>3.22.0</commons-lang3.version>
+</properties>
+
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>1.11.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>33.7.2-jre</version>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+```
+
+在应用目录检查实际运行时依赖树。检查实际依赖树中的 Bouncy Castle `jdk18on` 模块是否统一为 1.87。继续扫描运行时依赖以跟踪该维护线仍存在的安全公告。
+
+```bash
+mvn dependency:tree -Dscope=runtime
+```
 
 ## 6. 快速开始
 
