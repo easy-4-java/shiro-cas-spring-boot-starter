@@ -20,7 +20,7 @@ import org.jasig.cas.client.authentication.UrlPatternMatcherStrategy;
 
 public class ContainsPatternsUrlPatternMatcherStrategy implements UrlPatternMatcherStrategy {
 
-    private String[] patterns;
+    private String[] patterns = new String[0];
 
 	@Override
 	public boolean matches(String url) {
@@ -34,7 +34,7 @@ public class ContainsPatternsUrlPatternMatcherStrategy implements UrlPatternMatc
 
 	@Override
 	public void setPattern(String pattern) {
-		this.patterns = StringUtils.tokenizeToStringArray(pattern);
+		this.patterns = StringUtils.hasText(pattern) ? StringUtils.tokenizeToStringArray(pattern) : new String[0];
 	}
 
 }

@@ -103,6 +103,24 @@ class CasAssertionRealmTest {
     }
 
     @Test
+    void repositoryRealmUsesTheVerifiedServletAssertionWithoutRevalidatingATicket() {
+        Assertion assertion = assertionWithPermissions();
+        AssertionHolder.setAssertion(assertion);
+        ShiroPrincipalRepository repository = mock(ShiroPrincipalRepository.class);
+        repositoryRealm.setRepository(repository);
+        CasAssertionAuthenticationToken token = token(null);
+        AuthenticationInfo expected = new SimpleAuthenticationInfo("auditor", null, "repository");
+        when(repository.getAuthenticationInfo(token)).thenReturn(expected);
+
+        assertThat(repositoryRealm.doGetAuthenticationInfo(token)).isSameAs(expected);
+        assertThat(token.getAssertion()).isSameAs(assertion);
+        assertThat(token.getPrincipal()).isEqualTo("auditor");
+        assertThat(token.isRememberMe()).isTrue();
+        verify(repository).getAuthenticationInfo(token);
+        verifyNoInteractions(validator);
+    }
+
+    @Test
     void missingTicketFailsBeforeContactingTheValidator() {
         assertThatThrownBy(() -> simpleRealm.doGetAuthenticationInfo(token(null))).isInstanceOf(CasTicketFoundException.class);
         assertThatThrownBy(() -> repositoryRealm.doGetAuthenticationInfo(token(null))).isInstanceOf(CasTicketFoundException.class);

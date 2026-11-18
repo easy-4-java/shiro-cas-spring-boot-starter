@@ -78,6 +78,20 @@ class CasAuthenticatingFilterTest {
     }
 
     @Test
+    void successfulTicketKeepsTheRedirectWhenNoHandlerSupportsTheToken() throws Exception {
+        AuthenticationSuccessHandler handler = mock(AuthenticationSuccessHandler.class);
+        filter.setSuccessHandlers(Collections.singletonList(handler));
+        request.setParameter("ticket", "test-ticket");
+
+        dispatch();
+
+        CasAssertionAuthenticationToken token = captureSubmittedToken();
+        verify(handler).supports(token);
+        assertThat(response.getRedirectedUrl()).isEqualTo("/home");
+        assertThat(chain.getRequest()).isNull();
+    }
+
+    @Test
     void failedTicketUsesTheMatchingApplicationHandler() throws Exception {
         AuthenticationFailureHandler handler = mock(AuthenticationFailureHandler.class);
         AuthenticationException failure = new AuthenticationException("fixture rejection");
@@ -99,6 +113,35 @@ class CasAuthenticatingFilterTest {
 
         dispatch();
 
+        assertThat(response.getRedirectedUrl()).isEqualTo("/login-error");
+        assertThat(chain.getRequest()).isNull();
+    }
+
+    @Test
+    void userWithAnEstablishedSessionReturnsHomeWhenNoFailureHandlerSupportsTheError() throws Exception {
+        AuthenticationFailureHandler handler = mock(AuthenticationFailureHandler.class);
+        AuthenticationException failure = new AuthenticationException("fixture rejection");
+        doThrow(failure).when(subject).login(any(AuthenticationToken.class));
+        when(subject.isAuthenticated()).thenReturn(true);
+        filter.setFailureHandlers(Collections.singletonList(handler));
+
+        dispatch();
+
+        verify(handler).supports(failure);
+        assertThat(response.getRedirectedUrl()).isEqualTo("/home");
+        assertThat(chain.getRequest()).isNull();
+    }
+
+    @Test
+    void unauthenticatedCallbackReturnsToTheErrorPageWhenNoHandlerSupportsTheError() throws Exception {
+        AuthenticationFailureHandler handler = mock(AuthenticationFailureHandler.class);
+        AuthenticationException failure = new AuthenticationException("fixture rejection");
+        doThrow(failure).when(subject).login(any(AuthenticationToken.class));
+        filter.setFailureHandlers(Collections.singletonList(handler));
+
+        dispatch();
+
+        verify(handler).supports(failure);
         assertThat(response.getRedirectedUrl()).isEqualTo("/login-error");
         assertThat(chain.getRequest()).isNull();
     }
