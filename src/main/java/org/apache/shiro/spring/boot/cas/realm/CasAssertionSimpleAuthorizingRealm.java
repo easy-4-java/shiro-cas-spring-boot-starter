@@ -118,11 +118,7 @@ public class CasAssertionSimpleAuthorizingRealm extends AbstractAuthorizingRealm
 
      		casToken.setUsername(username);
             String rememberMeAttributeName = casProperties.getRememberMeAttributeName();
-            String rememberMeStringValue = (String)attributes.get(rememberMeAttributeName);
-            boolean isRemembered = rememberMeStringValue != null && Boolean.parseBoolean(rememberMeStringValue);
-            if (isRemembered) {
-                casToken.setRememberMe(true);
-            }
+            casToken.setRememberMe(MapUtils.getBoolean(attributes, rememberMeAttributeName, false));
             // create simple authentication info
             List<Object> principals = CollectionUtils.asList(username, attributes);
             PrincipalCollection principalCollection = new SimplePrincipalCollection(principals, getName());
@@ -140,7 +136,9 @@ public class CasAssertionSimpleAuthorizingRealm extends AbstractAuthorizingRealm
         try {
 
             // contact CAS server to validate service ticket
-            Assertion casAssertion = ticketValidator.validate(ticket, casProperties.getServerName());
+            String service = casProperties.getService();
+            Assertion casAssertion = ticketValidator.validate(ticket,
+                    StringUtils.hasText(service) ? service : casProperties.getServerName());
             // get principal, user id and attributes
             AttributePrincipal casPrincipal = casAssertion.getPrincipal();
             String username = casPrincipal.getName();
