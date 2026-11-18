@@ -1,0 +1,17 @@
+name: CI
+
+on:
+  push:
+    branches: [2.7.x, test/20261118, feature/REQ-20261118-wandl-shiro-cas-27-runtime-deps]
+  pull_request:
+    branches: [2.7.x, test/20261118]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    uses: easy-4-java/.github/.github/workflows/maven-starter-ci.yml@main
+    with:
+      java-version: '8'
+    secrets: inherit
