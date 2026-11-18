@@ -486,6 +486,12 @@
                 <commons-io.version>2.22.0</commons-io.version>
                 <javax.servlet-api.version>4.0.1</javax.servlet-api.version>
                 <slf4j.version>2.0.18</slf4j.version>
+        <spring-framework.version>5.3.39</spring-framework.version>
+        <jackson-bom.version>2.21.8</jackson-bom.version>
+        <snakeyaml.version>1.33</snakeyaml.version>
+        <commons-beanutils.version>1.11.0</commons-beanutils.version>
+        <guava.version>33.7.2-jre</guava.version>
+        <bouncycastle.version>1.87</bouncycastle.version>
         <commons-lang3.version>3.22.0</commons-lang3.version>
     </properties>
 
@@ -560,18 +566,41 @@
             <groupId>org.jasig.cas.client</groupId>
             <artifactId>cas-client-core</artifactId>
             <version>${cas-client.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>bcpkix-jdk15on</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk18on</artifactId>
+            <version>${bouncycastle.version}</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.jasig.cas.client/cas-client-support-saml -->
         <dependency>
             <groupId>org.jasig.cas.client</groupId>
             <artifactId>cas-client-support-saml</artifactId>
             <version>${cas-client.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>bcpkix-jdk15on</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.jasig.cas.client/cas-client-support-distributed-ehcache -->
         <dependency>
             <groupId>org.jasig.cas.client</groupId>
             <artifactId>cas-client-support-distributed-ehcache</artifactId>
            <version>${cas-client.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>bcpkix-jdk15on</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.codehaus.woodstox/woodstox-core-asl -->
         <dependency>
@@ -611,9 +640,14 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>commons-beanutils</groupId>
                 <artifactId>commons-beanutils</artifactId>
-                <version>1.11.0</version>
+                <version>${commons-beanutils.version}</version>
             </dependency>
             <dependency>
                 <groupId>javax.servlet</groupId>
