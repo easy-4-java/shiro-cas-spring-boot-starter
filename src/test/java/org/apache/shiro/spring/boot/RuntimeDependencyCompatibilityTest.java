@@ -3,6 +3,7 @@ package org.apache.shiro.spring.boot;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.env.YamlPropertySourceLoader;
@@ -16,11 +17,15 @@ class RuntimeDependencyCompatibilityTest {
 
     @Test
     void bootLoadsNestedYamlProperties() throws Exception {
-        byte[] yaml = "shiro:\n  enabled: true\n".getBytes(StandardCharsets.UTF_8);
-        PropertySource<?> source = new YamlPropertySourceLoader()
-                .load("security", new ByteArrayResource(yaml)).get(0);
+        String yaml = "shiro:\n  enabled: true\n  paths:\n    - /login\n"
+                + "---\nshiro:\n  enabled: false\n";
+        List<PropertySource<?>> sources = new YamlPropertySourceLoader()
+                .load("security", new ByteArrayResource(yaml.getBytes(StandardCharsets.UTF_8)));
 
-        assertThat(source.getProperty("shiro.enabled")).isEqualTo(true);
+        assertThat(sources).hasSize(2);
+        assertThat(sources.get(0).getProperty("shiro.enabled")).isEqualTo(true);
+        assertThat(sources.get(0).getProperty("shiro.paths[0]")).isEqualTo("/login");
+        assertThat(sources.get(1).getProperty("shiro.enabled")).isEqualTo(false);
     }
 
     @Test

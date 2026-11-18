@@ -89,7 +89,7 @@ Starter 自动装配以下 Bean：
 <properties>
     <spring-framework.version>5.3.39</spring-framework.version>
     <jackson-bom.version>2.21.8</jackson-bom.version>
-    <snakeyaml.version>1.33</snakeyaml.version>
+    <snakeyaml.version>2.7</snakeyaml.version>
     <commons-lang3.version>3.22.0</commons-lang3.version>
 </properties>
 
