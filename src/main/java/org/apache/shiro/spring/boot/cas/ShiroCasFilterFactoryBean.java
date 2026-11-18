@@ -5,7 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.servlet.Filter;
+import jakarta.servlet.Filter;
 
 import org.apache.shiro.biz.spring.ShiroFilterProxyFactoryBean;
 import org.apache.shiro.web.filter.AccessControlFilter;
@@ -69,9 +69,8 @@ public class ShiroCasFilterFactoryBean extends ShiroFilterProxyFactoryBean imple
 			while (ite.hasNext()) {
 				Entry<String, FilterRegistrationBean> entry = ite.next();
 				Object delegate = entry.getValue().getFilter();
-				// Unwrap JakartaFilterAdapter if present
-				Filter filter = unwrapFilter(delegate);
-				if (filter != null && this.supports(filter)) {
+				var filter = entry.getValue().getFilter();
+				if (this.supports(filter)) {
 					filters.put(entry.getKey(), filter);
 				}
 			}
@@ -83,31 +82,6 @@ public class ShiroCasFilterFactoryBean extends ShiroFilterProxyFactoryBean imple
 
 	}
 
-	/**
-	 * Unwrap a filter from a JakartaFilterAdapter if needed.
-	 */
-	private Filter unwrapFilter(Object delegate) {
-		if (delegate instanceof Filter) {
-			return (Filter) delegate;
-		}
-		// Handle JakartaFilterAdapter wrapping javax.servlet.Filter
-		try {
-			java.lang.reflect.Method getDelegate = delegate.getClass().getMethod("getDelegate");
-			Object inner = getDelegate.invoke(delegate);
-			if (inner instanceof Filter) {
-				return (Filter) inner;
-			}
-		} catch (Exception ignored) {
-		}
-		return null;
-	}
-
-	/**
-	 * Sets the application context.
-	 *
-	 * @param applicationContext the application context
-	 * @throws BeansException if an error occurs
-	 */
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 		this.applicationContext = applicationContext;

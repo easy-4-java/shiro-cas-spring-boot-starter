@@ -20,7 +20,12 @@ import java.net.URL;
 
 
 import org.apache.shiro.spring.boot.cas.CasClientProperties;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apereo.cas.client.util.CommonUtils;
+import org.apereo.cas.client.util.WebUtils;
+
+import org.springframework.util.StringUtils;
 
 /**
  * Utility class for constructing CAS-related URLs (callback, redirect, login, logout).
@@ -136,24 +141,13 @@ public class CasUrlUtils {
 	 * @param casProperties the cas properties
 	 * @return the result
 	 */
-	public static String constructServiceUrl(javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response, CasClientProperties casProperties) {
-
-		String serviceUrl = casProperties.getServerName();
-		if (serviceUrl == null || serviceUrl.isEmpty()) {
-			serviceUrl = request.getRequestURL().toString();
-		}
-		String artifactParameter = casProperties.getArtifactParameterName();
-		if (artifactParameter != null && !artifactParameter.isEmpty()) {
-			int ticketIndex = serviceUrl.indexOf("?ticket=");
-			if (ticketIndex == -1) {
-				ticketIndex = serviceUrl.indexOf("&ticket=");
-			}
-			if (ticketIndex > 0) {
-				serviceUrl = serviceUrl.substring(0, ticketIndex);
-			}
-		}
-		return serviceUrl;
-
+	public static String constructServiceUrl(HttpServletRequest request, HttpServletResponse response,
+			CasClientProperties casProperties) {
+		String serverName = StringUtils.hasText(casProperties.getServerName())
+				? casProperties.getServerName() : request.getServerName();
+		return WebUtils.constructServiceUrl(request, response, casProperties.getService(),
+				serverName, casProperties.getServiceParameterName(),
+				casProperties.getArtifactParameterName(), casProperties.isEncodeServiceUrl());
 	}
 
 }

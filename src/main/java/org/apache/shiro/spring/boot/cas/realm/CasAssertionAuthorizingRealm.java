@@ -28,7 +28,7 @@ import org.apache.shiro.spring.boot.ShiroCasProperties;
 import org.apache.shiro.spring.boot.cas.exception.CasTicketFoundException;
 import org.apache.shiro.spring.boot.cas.token.CasAssertionAuthenticationToken;
 import org.apache.shiro.spring.boot.utils.CasTicketValidatorUtils;
-import org.apache.shiro.util.StringUtils;
+import org.apache.shiro.lang.util.StringUtils;
 import org.apereo.cas.client.authentication.AttributePrincipal;
 import org.apereo.cas.client.util.AssertionHolder;
 import org.apereo.cas.client.validation.Assertion;

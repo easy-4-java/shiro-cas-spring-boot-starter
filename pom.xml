@@ -57,9 +57,9 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <!-- Third-Party Dependencies -->
-        <cas-client.version>4.0.4</cas-client.version>
+        <bouncycastle.version>1.87</bouncycastle.version>
+        <cas-client.version>4.1.1</cas-client.version>
         <commons-io.version>2.22.0</commons-io.version>
-        <javax.servlet-api.version>3.1.0</javax.servlet-api.version>
         <slf4j.version>2.0.18</slf4j.version>
         <spring-boot-starter-shiro-biz.version>4.1.x.20260630-SNAPSHOT</spring-boot-starter-shiro-biz.version>
         <woodstox-asl.version>4.4.1</woodstox-asl.version>
@@ -91,6 +91,21 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcpkix-jdk18on</artifactId>
+                <version>${bouncycastle.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk18on</artifactId>
+                <version>${bouncycastle.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcutil-jdk18on</artifactId>
+                <version>${bouncycastle.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
@@ -124,14 +139,6 @@
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
             <optional>true</optional>
-        </dependency>
-
-        <!-- For javax.servlet (Shiro 1.x compatibility) -->
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>${javax.servlet-api.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <!-- For Slf4j -->
@@ -212,7 +219,7 @@
         <!-- Source: https://github.com/easy-4-java/shiro-biz-spring-boot-starter — easy4j shiro-biz-spring-boot-starter -->
         <dependency>
             <groupId>io.github.easy4j</groupId>
-            <artifactId>shiro-biz-spring-boot-starter</artifactId>
+            <artifactId>shiro-extension-spring-boot-starter</artifactId>
             <version>${spring-boot-starter-shiro-biz.version}</version>
         </dependency>
 
