@@ -473,6 +473,9 @@
         <cas-client.version>3.6.4</cas-client.version>
         <jackson-bom.version>2.21.8</jackson-bom.version>
         <bouncycastle.version>1.87</bouncycastle.version>
+        <commons-lang3.version>3.22.0</commons-lang3.version>
+        <guava.version>33.7.2-jre</guava.version>
+        <log4j2.version>2.25.5</log4j2.version>
         <maven.version>3.0</maven.version>
            <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
         <maven-jacoco-plugin.version>0.8.15</maven-jacoco-plugin.version>
@@ -632,6 +635,11 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
