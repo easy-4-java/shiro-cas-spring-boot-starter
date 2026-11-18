@@ -27,7 +27,7 @@ public class AntPatternMatcherStrategy implements UrlPatternMatcherStrategy {
 	 */
 	public static String CONFIG_LOCATION_DELIMITERS = ",; \t\n";
 	private final AntPathMatcher matcher = new AntPathMatcher();
-	private String[] patterns;
+	private String[] patterns = new String[0];
 
 	@Override
 	public boolean matches(String url) {
@@ -41,7 +41,7 @@ public class AntPatternMatcherStrategy implements UrlPatternMatcherStrategy {
 
 	@Override
 	public void setPattern(String pattern) {
-		this.patterns = StringUtils.tokenizeToStringArray(pattern, CONFIG_LOCATION_DELIMITERS);
+		this.patterns = StringUtils.hasText(pattern) ? StringUtils.tokenizeToStringArray(pattern, CONFIG_LOCATION_DELIMITERS) : new String[0];
 	}
 
 

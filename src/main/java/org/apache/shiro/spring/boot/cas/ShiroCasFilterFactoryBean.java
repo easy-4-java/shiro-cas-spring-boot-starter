@@ -1,20 +1,18 @@
 package org.apache.shiro.spring.boot.cas;
 
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
-import jakarta.servlet.Filter;
+import javax.servlet.Filter;
 
 import org.apache.shiro.biz.spring.ShiroFilterProxyFactoryBean;
+import org.apache.shiro.spring.boot.biz.ShiroBizFilterFactoryBean;
 import org.apache.shiro.web.filter.AccessControlFilter;
 import org.apache.shiro.web.filter.authc.LogoutFilter;
 import org.springframework.beans.BeansException;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.util.ObjectUtils;
 
 
 /**
@@ -41,17 +39,16 @@ public class ShiroCasFilterFactoryBean extends ShiroFilterProxyFactoryBean imple
 
 		Map<String, Filter> filters = new LinkedHashMap<String, Filter>();
 
-		Map<String, FilterRegistrationBean> beansOfType = getApplicationContext()
-				.getBeansOfType(FilterRegistrationBean.class);
-		if (!ObjectUtils.isEmpty(beansOfType)) {
-			Iterator<Entry<String, FilterRegistrationBean>> ite = beansOfType.entrySet().iterator();
-			while (ite.hasNext()) {
-				Entry<String, FilterRegistrationBean> entry = ite.next();
-				if (this.supports(entry.getValue().getFilter())) {
-					filters.put(entry.getKey(), entry.getValue().getFilter());
-				}
-			}
-		}
+        ApplicationContext context = getApplicationContext();
+        for (String name : context.getBeanNamesForType(FilterRegistrationBean.class, true, false)) {
+            if (ShiroBizFilterFactoryBean.FILTER_REGISTRATION_BEAN_NAME.equals(name)) {
+                continue;
+            }
+            Filter filter = context.getBean(name, FilterRegistrationBean.class).getFilter();
+            if (supports(filter)) {
+                filters.put(name, filter);
+            }
+        }
 
 		filters.putAll(super.getFilters());
 
