@@ -87,7 +87,7 @@ public class CasUrlUtils {
 	
 	public static String constructServiceUrl(ServletRequest request, ServletResponse response, CasClientProperties casProperties) {
 		
-		return CommonUtils.constructServiceUrl(WebUtils.toHttp(request), WebUtils.toHttp(response), casProperties.getServerName(),
+		return CommonUtils.constructServiceUrl(WebUtils.toHttp(request), WebUtils.toHttp(response), casProperties.getService(),
 				casProperties.getServerName(), casProperties.getServiceParameterName(),
 				casProperties.getArtifactParameterName(), casProperties.isEncodeServiceUrl());
 		

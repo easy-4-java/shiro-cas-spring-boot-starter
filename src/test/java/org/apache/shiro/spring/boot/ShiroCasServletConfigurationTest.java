@@ -1,12 +1,21 @@
 package org.apache.shiro.spring.boot;
 
+import java.util.stream.Stream;
+
 import org.apache.shiro.event.EventBus;
 import org.apache.shiro.event.support.DefaultEventBus;
 import org.apache.shiro.mgt.SubjectFactory;
 import org.apache.shiro.spring.boot.cas.CasSubjectFactory;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
+import org.jasig.cas.client.Protocol;
+import org.jasig.cas.client.validation.AbstractTicketValidationFilter;
+import org.jasig.cas.client.validation.Cas10TicketValidationFilter;
 import org.jasig.cas.client.validation.Cas20ProxyReceivingTicketValidationFilter;
-import org.junit.jupiter.api.Test;
+import org.jasig.cas.client.validation.Cas30ProxyReceivingTicketValidationFilter;
+import org.jasig.cas.client.validation.Saml11TicketValidationFilter;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -15,14 +24,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class ShiroCasServletConfigurationTest {
 
-    @Test
-    void casAndShiroBizShareOneServletRegistration() {
+    @ParameterizedTest
+    @MethodSource("protocolFilters")
+    void casAndShiroBizShareOneServletRegistration(Protocol protocol,
+                                                   Class<? extends AbstractTicketValidationFilter> validator) {
         new WebApplicationContextRunner()
                 .withConfiguration(AutoConfigurations.of(ShiroBizAutoConfiguration.class,
                         ShiroBizWebAutoConfiguration.class, ShiroBizWebFilterConfiguration.class,
                         ShiroCasWebAutoConfiguration.class, ShiroCasWebFilterConfiguration.class))
                 .withBean(EventBus.class, DefaultEventBus::new)
-                .withPropertyValues("shiro.enabled=true", "shiro.cas.enabled=true",
+                .withPropertyValues("shiro.enabled=true", "shiro.cas.enabled=true", "shiro.cas.protocol=" + protocol.name(),
                         "shiro.static-security-manager-enabled=false",
                         "shiro.cas.cas-server-login-url=https://sso.example.test/login",
                         "shiro.cas.cas-server-logout-url=https://sso.example.test/logout",
@@ -42,9 +53,16 @@ class ShiroCasServletConfigurationTest {
                     assertThat(factory.getFilterChainDefinitionMap()).containsEntry("/callback", "cas");
                     assertThat(factory.getFilters()).containsKeys("cas", "casLogout");
                     FilterRegistrationBean<?> tickets = context.getBean("ticketValidationFilter", FilterRegistrationBean.class);
-                    assertThat(tickets.getFilter()).isInstanceOf(Cas20ProxyReceivingTicketValidationFilter.class);
+                    assertThat(tickets.getFilter()).isExactlyInstanceOf(validator);
                     assertThat(tickets.getUrlPatterns()).containsExactly("/callback");
                     assertThat(context.getBean("cas", FilterRegistrationBean.class).isEnabled()).isFalse();
                 });
     }
+    static Stream<Arguments> protocolFilters() {
+        return Stream.of(Arguments.of(Protocol.CAS1, Cas10TicketValidationFilter.class),
+                Arguments.of(Protocol.CAS2, Cas20ProxyReceivingTicketValidationFilter.class),
+                Arguments.of(Protocol.CAS3, Cas30ProxyReceivingTicketValidationFilter.class),
+                Arguments.of(Protocol.SAML11, Saml11TicketValidationFilter.class));
+    }
+
 }

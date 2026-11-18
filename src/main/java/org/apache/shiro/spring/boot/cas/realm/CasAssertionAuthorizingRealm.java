@@ -106,7 +106,9 @@ public class CasAssertionAuthorizingRealm extends AbstractAuthorizingRealm {
 
 			TicketValidator ticketValidator = ensureTicketValidator();
 			// contact CAS server to validate service ticket
-			Assertion casAssertion = ticketValidator.validate(ticket, casProperties.getServerName());
+			String service = casProperties.getService();
+			Assertion casAssertion = ticketValidator.validate(ticket,
+					StringUtils.hasText(service) ? service : casProperties.getServerName());
 			casToken.setAssertion(casAssertion);
 			// get principal, user id and attributes
 			AttributePrincipal casPrincipal = casAssertion.getPrincipal();
