@@ -21,7 +21,7 @@
 
 ---
 
-> **当前版本**：`2.7.x.20260527-SNAPSHOT`<br>
+> **当前版本**：`2.7.x.20260630-SNAPSHOT`<br>
 > **JDK 基线**：`1.8`<br>
 > **Group ID**：`io.github.easy4j`<br>
 > **Artifact ID**：`shiro-cas-spring-boot-starter`<br>
@@ -37,7 +37,7 @@
 | 消费方 | 使用 shiro-biz 的 Spring Boot 应用 |
 | 核心能力 | 自动装配、属性绑定、开箱即用的 shiro-biz Bean |
 | JDK | `1.8` |
-| 坐标 | `io.github.easy4j:shiro-cas-spring-boot-starter:2.7.x.20260527-SNAPSHOT` |
+| 坐标 | `io.github.easy4j:shiro-cas-spring-boot-starter:2.7.x.20260630-SNAPSHOT` |
 | 配置前缀 | `shiro.cas` |
 
 ## 2. 核心能力
@@ -75,7 +75,7 @@ Starter 自动装配以下 Bean：
 <dependency>
     <groupId>io.github.easy4j</groupId>
     <artifactId>shiro-cas-spring-boot-starter</artifactId>
-    <version>2.7.x.20260527-SNAPSHOT</version>
+    <version>2.7.x.20260630-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -87,6 +87,17 @@ Starter 自动装配以下 Bean：
     <artifactId>shiro-biz-spring-boot-starter</artifactId>
 </dependency>
 ```
+
+
+使用 Spring Boot 2.7 父 POM 的应用可以在应用自己的 `pom.xml` 中覆盖 SnakeYAML 版本。Boot 2.7.18 默认管理的是 1.30，应用级依赖管理会覆盖 Starter 的传递版本。
+
+```xml
+<properties>
+    <snakeyaml.version>2.7</snakeyaml.version>
+</properties>
+```
+
+运行 `mvn dependency:tree -Dincludes=org.yaml:snakeyaml`，确认应用最终解析到 `org.yaml:snakeyaml:2.7`。
 
 ## 6. 快速开始
 

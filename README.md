@@ -21,7 +21,7 @@
 
 ---
 
-> **Current Version**：`2.7.x.20260527-SNAPSHOT`<br>
+> **Current Version**：`2.7.x.20260630-SNAPSHOT`<br>
 > **JDK Baseline**：`1.8`<br>
 > **Group ID**：`io.github.easy4j`<br>
 > **Artifact ID**：`shiro-cas-spring-boot-starter`<br>
@@ -37,7 +37,7 @@
 | Consumers | Spring Boot applications using shiro-biz |
 | Core Capabilities | auto-configuration, property binding, ready-to-use beans for shiro-biz |
 | JDK | `1.8` |
-| Coordinates | `io.github.easy4j:shiro-cas-spring-boot-starter:2.7.x.20260527-SNAPSHOT` |
+| Coordinates | `io.github.easy4j:shiro-cas-spring-boot-starter:2.7.x.20260630-SNAPSHOT` |
 | Config Prefix | `shiro.cas` |
 
 ## 2. Core Capabilities
@@ -75,7 +75,7 @@ Auto-configuration registration:
 <dependency>
     <groupId>io.github.easy4j</groupId>
     <artifactId>shiro-cas-spring-boot-starter</artifactId>
-    <version>2.7.x.20260527-SNAPSHOT</version>
+    <version>2.7.x.20260630-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -87,6 +87,17 @@ This starter depends on the following components (managed by ddd4j BOM):
     <artifactId>shiro-biz-spring-boot-starter</artifactId>
 </dependency>
 ```
+
+
+Applications that inherit the Spring Boot 2.7 parent can override the SnakeYAML version in their own `pom.xml`. Spring Boot 2.7.18 manages version 1.30 by default, and application dependency management overrides the transitive version from this starter.
+
+```xml
+<properties>
+    <snakeyaml.version>2.7</snakeyaml.version>
+</properties>
+```
+
+Run `mvn dependency:tree -Dincludes=org.yaml:snakeyaml` and confirm that the application resolves `org.yaml:snakeyaml:2.7`.
 
 ## 6. Quick Start
 
