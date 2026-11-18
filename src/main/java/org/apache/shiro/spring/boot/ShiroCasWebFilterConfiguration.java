@@ -18,6 +18,7 @@ import org.apache.shiro.spring.boot.cas.filter.CasAuthenticatingFilter;
 import org.apache.shiro.spring.boot.cas.filter.CasLogoutFilter;
 import org.apache.shiro.spring.boot.cas.realm.CasAssertionAuthorizingRealm;
 import org.apache.shiro.spring.boot.utils.CasUrlUtils;
+import org.apache.shiro.spring.boot.biz.ShiroBizFilterFactoryBean;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.spring.web.config.AbstractShiroWebFilterConfiguration;
 import org.apache.shiro.web.servlet.AbstractShiroFilter;
@@ -309,8 +310,14 @@ public class ShiroCasWebFilterConfiguration extends AbstractShiroWebFilterConfig
 	    return registration;
 	}
 
-	@Bean
-	public Realm casRealm(ObjectProvider<ShiroPrincipalRepository> repositoryProvider,
+    public Realm casRealm(ObjectProvider<ShiroPrincipalRepository> repositoryProvider,
+                          ObjectProvider<AuthorizingRealmListener> realmsListenerProvider) {
+        return configureCasRealm(casProperties, bizProperties, repositoryProvider, realmsListenerProvider);
+    }
+
+    @Bean("casRealm")
+    static Realm configureCasRealm(ShiroCasProperties casProperties, ShiroBizProperties bizProperties,
+                          ObjectProvider<ShiroPrincipalRepository> repositoryProvider,
 						  ObjectProvider<AuthorizingRealmListener> realmsListenerProvider) {
 
 		CasAssertionAuthorizingRealm casRealm = new CasAssertionAuthorizingRealm(casProperties);
@@ -332,7 +339,8 @@ public class ShiroCasWebFilterConfiguration extends AbstractShiroWebFilterConfig
 		return casRealm;
 	}
 
-	@Bean
+	// The outer Shiro filter must not be injected into its own filter map.
+	@Bean(autowireCandidate = false)
     @Override
     protected ShiroFilterFactoryBean shiroFilterFactoryBean() {
 
@@ -355,8 +363,8 @@ public class ShiroCasWebFilterConfiguration extends AbstractShiroWebFilterConfig
 
     }
 
-	@Bean(name = "filterShiroFilterRegistrationBean")
-	@ConditionalOnMissingBean
+	@Bean(name = ShiroBizFilterFactoryBean.FILTER_REGISTRATION_BEAN_NAME)
+	@ConditionalOnMissingBean(name = ShiroBizFilterFactoryBean.FILTER_REGISTRATION_BEAN_NAME)
 	protected FilterRegistrationBean<AbstractShiroFilter> filterShiroFilterRegistrationBean() throws Exception {
 
 		FilterRegistrationBean<AbstractShiroFilter> filterRegistrationBean = new FilterRegistrationBean<AbstractShiroFilter>();
