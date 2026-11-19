@@ -1,0 +1,1599 @@
+diff --git a/pom.xml b/pom.xml
+index 85917da..972aed1 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -470,7 +470,8 @@
+         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+         <javax.servlet-api.version>3.1.0</javax.servlet-api.version>
+-        <cas-client.version>3.6.4</cas-client.version>
++        <cas-client.version>4.0.4</cas-client.version>
++        <nimbus-jose-jwt.version>9.37.4</nimbus-jose-jwt.version>
+         <jackson-bom.version>2.21.8</jackson-bom.version>
+         <bouncycastle.version>1.87</bouncycastle.version>
+         <commons-lang3.version>3.22.0</commons-lang3.version>
+@@ -483,7 +484,7 @@
+         <maven-jar-plugin.version>3.1.1</maven-jar-plugin.version>
+         <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
+         <maven-resources-plugin.version>3.1.0</maven-resources-plugin.version>
+-        <maven-surefire-plugin.version>2.22.1</maven-surefire-plugin.version>
++        <maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
+         <maven-nexus-staging-plugin.version>1.6.8</maven-nexus-staging-plugin.version>
+         <spring-boot-starter-shiro-biz.version>3.5.x.20260630-SNAPSHOT</spring-boot-starter-shiro-biz.version>
+         <woodstox-stax2-api.version>4.1</woodstox-stax2-api.version>
+@@ -557,9 +558,9 @@
+             <artifactId>spring-boot-autoconfigure</artifactId>
+         </dependency>
+ 
+-        <!-- https://mvnrepository.com/artifact/org.jasig.cas.client/cas-client-core -->
++        <!-- https://mvnrepository.com/artifact/org.apereo.cas.client/cas-client-core -->
+         <dependency>
+-            <groupId>org.jasig.cas.client</groupId>
++            <groupId>org.apereo.cas.client</groupId>
+             <artifactId>cas-client-core</artifactId>
+             <version>${cas-client.version}</version>
+             <exclusions>
+@@ -574,9 +575,9 @@
+             <artifactId>bcpkix-jdk18on</artifactId>
+             <version>${bouncycastle.version}</version>
+         </dependency>
+-        <!-- https://mvnrepository.com/artifact/org.jasig.cas.client/cas-client-support-saml -->
++        <!-- https://mvnrepository.com/artifact/org.apereo.cas.client/cas-client-support-saml -->
+         <dependency>
+-            <groupId>org.jasig.cas.client</groupId>
++            <groupId>org.apereo.cas.client</groupId>
+             <artifactId>cas-client-support-saml</artifactId>
+             <version>${cas-client.version}</version>
+             <exclusions>
+@@ -586,9 +587,9 @@
+                 </exclusion>
+             </exclusions>
+         </dependency>
+-        <!-- https://mvnrepository.com/artifact/org.jasig.cas.client/cas-client-support-distributed-ehcache -->
++        <!-- https://mvnrepository.com/artifact/org.apereo.cas.client/cas-client-support-distributed-ehcache -->
+         <dependency>
+-            <groupId>org.jasig.cas.client</groupId>
++            <groupId>org.apereo.cas.client</groupId>
+             <artifactId>cas-client-support-distributed-ehcache</artifactId>
+            <version>${cas-client.version}</version>
+             <exclusions>
+@@ -635,6 +636,11 @@
+ 
+     <dependencyManagement>
+         <dependencies>
++            <dependency>
++                <groupId>com.nimbusds</groupId>
++                <artifactId>nimbus-jose-jwt</artifactId>
++                <version>${nimbus-jose-jwt.version}</version>
++            </dependency>
+             <dependency>
+                 <groupId>com.google.guava</groupId>
+                 <artifactId>guava</artifactId>
+diff --git a/src/main/java/org/apache/shiro/spring/boot/ShiroCasProperties.java b/src/main/java/org/apache/shiro/spring/boot/ShiroCasProperties.java
+index 9368542..04326c8 100644
+--- a/src/main/java/org/apache/shiro/spring/boot/ShiroCasProperties.java
++++ b/src/main/java/org/apache/shiro/spring/boot/ShiroCasProperties.java
+@@ -4,7 +4,7 @@ import java.util.LinkedHashMap;
+ import java.util.Map;
+ 
+ import org.apache.shiro.spring.boot.cas.CasClientProperties;
+-import org.jasig.cas.client.Protocol;
++import org.apereo.cas.client.Protocol;
+ import org.springframework.boot.context.properties.ConfigurationProperties;
+ 
+ import lombok.Getter;
+diff --git a/src/main/java/org/apache/shiro/spring/boot/ShiroCasWebAutoConfiguration.java b/src/main/java/org/apache/shiro/spring/boot/ShiroCasWebAutoConfiguration.java
+index 0ca66c9..9cfcac4 100644
+--- a/src/main/java/org/apache/shiro/spring/boot/ShiroCasWebAutoConfiguration.java
++++ b/src/main/java/org/apache/shiro/spring/boot/ShiroCasWebAutoConfiguration.java
+@@ -1,41 +1,82 @@
+-package org.apache.shiro.spring.boot;
+-
+-import org.apache.shiro.mgt.SubjectFactory;
+-import org.apache.shiro.spring.boot.cas.CasSubjectFactory;
+-import org.apache.shiro.spring.web.config.AbstractShiroWebConfiguration;
+-import org.springframework.beans.BeansException;
+-import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+-import org.springframework.boot.context.properties.EnableConfigurationProperties;
+-import org.springframework.context.ApplicationContext;
+-import org.springframework.context.ApplicationContextAware;
+-import org.springframework.context.annotation.Bean;
+-import org.springframework.context.annotation.Configuration;
+-
+-@Configuration
+-@AutoConfigureBefore( name = {
+-	"org.apache.shiro.spring.config.web.autoconfigure.ShiroWebAutoConfiguration",  // shiro-spring-boot-web-starter
+-	"org.apache.shiro.spring.boot.ShiroBizWebAutoConfiguration" // shiro-biz-spring-boot-starter
+-})
+-@ConditionalOnProperty(prefix = ShiroCasProperties.PREFIX, value = "enabled", havingValue = "true")
+-@EnableConfigurationProperties({ ShiroBizProperties.class })
+-public class ShiroCasWebAutoConfiguration extends AbstractShiroWebConfiguration implements ApplicationContextAware  {
+-
+-	private ApplicationContext applicationContext;
+-	
+-	@Bean
+-	@Override
+-    protected SubjectFactory subjectFactory() {
+-        return new CasSubjectFactory();
+-    }
+-	
+-	@Override
+-	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+-		this.applicationContext = applicationContext;
+-	}
+-
+-	public ApplicationContext getApplicationContext() {
+-		return applicationContext;
+-	}
+-	
+-}
++package org.apache.shiro.spring.boot;
++
++import org.apache.shiro.mgt.SubjectFactory;
++import org.apache.shiro.spring.boot.cas.CasSubjectFactory;
++import org.springframework.boot.autoconfigure.AutoConfiguration;
++import org.springframework.beans.factory.ObjectProvider;
++import org.springframework.context.annotation.Primary;
++
++import java.util.stream.Collectors;
++import org.apache.shiro.authc.credential.AllowAllCredentialsMatcher;
++import org.apache.shiro.biz.authz.principal.ShiroPrincipalRepository;
++import org.apache.shiro.biz.realm.AuthorizingRealmListener;
++import org.apache.shiro.realm.Realm;
++import org.apache.shiro.spring.boot.cas.realm.CasAssertionAuthorizingRealm;
++
++import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
++import org.springframework.boot.context.properties.EnableConfigurationProperties;
++import org.springframework.context.annotation.Bean;
++
++/**
++ * Auto-configuration for Shiro CAS web authentication.
++ * <p>Registers CAS-specific subject factory and configuration when CAS is enabled.</p>
++ *
++ * @author <a href="https://github.com/loong10k">Loong Wan</a>
++ * @since 1.0.0
++ */
++@AutoConfiguration(beforeName = {
++	"org.apache.shiro.spring.config.web.autoconfigure.ShiroWebAutoConfiguration",  // shiro-spring-boot-web-starter
++	"org.apache.shiro.spring.boot.ShiroBizWebAutoConfiguration" // shiro-biz-spring-boot-starter
++})
++/**
++ * <p>Configuration properties.</p>
++ *
++ * @author <a href="https://github.com/loong10k">Loong Wan</a>
++ * @since 1.0.0
++ */
++@ConditionalOnProperty(prefix = ShiroCasProperties.PREFIX, value = "enabled", havingValue = "true")
++@EnableConfigurationProperties({ ShiroBizProperties.class, ShiroCasProperties.class })
++public class ShiroCasWebAutoConfiguration {
++
++	/**
++	 * Creates the CAS subject factory.
++	 * @return the CAS subject factory
++	 */
++	@Bean
++	@Primary
++    protected SubjectFactory subjectFactory() {
++        return new CasSubjectFactory();
++    }
++
++	/**
++	 * cas Realm.
++	 *
++	 * @param repositoryProvider the repository provider
++	 * @param realmsListenerProvider the realms listener provider
++	 * @return the result
++	 */
++	@Bean
++	public Realm casRealm(ShiroCasProperties casProperties, ShiroBizProperties bizProperties,
++						  ObjectProvider<ShiroPrincipalRepository> repositoryProvider,
++						  ObjectProvider<AuthorizingRealmListener> realmsListenerProvider) {
++
++		CasAssertionAuthorizingRealm casRealm = new CasAssertionAuthorizingRealm(casProperties);
++		//认证账号信息提供实现：认证信息、角色信息、权限信息；业务系统需要自己实现该接口
++		casRealm.setRepository(repositoryProvider.getIfAvailable());
++		//凭证匹配器：该对象主要做密码校验
++		casRealm.setCredentialsMatcher(new AllowAllCredentialsMatcher());
++		//Realm 执行监听：实现该接口可监听认证失败和成功的状态，从而做业务系统自己的事情，比如记录日志
++		casRealm.setRealmsListeners(realmsListenerProvider.stream().collect(Collectors.toList()));
++		//缓存相关的配置：采用提供的默认配置即可
++		casRealm.setCachingEnabled(bizProperties.isCachingEnabled());
++		//认证缓存配置
++		casRealm.setAuthenticationCachingEnabled(bizProperties.isAuthenticationCachingEnabled());
++		casRealm.setAuthenticationCacheName(bizProperties.getAuthenticationCacheName());
++		//授权缓存配置
++		casRealm.setAuthorizationCachingEnabled(bizProperties.isAuthorizationCachingEnabled());
++		casRealm.setAuthorizationCacheName(bizProperties.getAuthorizationCacheName());
++
++		return casRealm;
++	}
++
++}
+diff --git a/src/main/java/org/apache/shiro/spring/boot/ShiroCasWebFilterConfiguration.java b/src/main/java/org/apache/shiro/spring/boot/ShiroCasWebFilterConfiguration.java
+index fd62752..170f5e8 100644
+--- a/src/main/java/org/apache/shiro/spring/boot/ShiroCasWebFilterConfiguration.java
++++ b/src/main/java/org/apache/shiro/spring/boot/ShiroCasWebFilterConfiguration.java
+@@ -21,19 +21,19 @@ import org.apache.shiro.spring.boot.utils.CasUrlUtils;
+ import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
+ import org.apache.shiro.spring.web.config.AbstractShiroWebFilterConfiguration;
+ import org.apache.shiro.web.servlet.AbstractShiroFilter;
+-import org.jasig.cas.client.Protocol;
+-import org.jasig.cas.client.authentication.AuthenticationFilter;
+-import org.jasig.cas.client.authentication.Saml11AuthenticationFilter;
+-import org.jasig.cas.client.configuration.ConfigurationKeys;
+-import org.jasig.cas.client.session.SingleSignOutHttpSessionListener;
+-import org.jasig.cas.client.util.AbstractCasFilter;
+-import org.jasig.cas.client.util.AssertionThreadLocalFilter;
+-import org.jasig.cas.client.util.HttpServletRequestWrapperFilter;
+-import org.jasig.cas.client.validation.AbstractTicketValidationFilter;
+-import org.jasig.cas.client.validation.Cas10TicketValidationFilter;
+-import org.jasig.cas.client.validation.Cas20ProxyReceivingTicketValidationFilter;
+-import org.jasig.cas.client.validation.Cas30ProxyReceivingTicketValidationFilter;
+-import org.jasig.cas.client.validation.Saml11TicketValidationFilter;
++import org.apereo.cas.client.Protocol;
++import org.apereo.cas.client.authentication.AuthenticationFilter;
++import org.apereo.cas.client.authentication.Saml11AuthenticationFilter;
++import org.apereo.cas.client.configuration.ConfigurationKeys;
++import org.apereo.cas.client.session.SingleSignOutHttpSessionListener;
++import org.apereo.cas.client.util.AbstractCasFilter;
++import org.apereo.cas.client.util.AssertionThreadLocalFilter;
++import org.apereo.cas.client.util.HttpServletRequestWrapperFilter;
++import org.apereo.cas.client.validation.AbstractTicketValidationFilter;
++import org.apereo.cas.client.validation.Cas10TicketValidationFilter;
++import org.apereo.cas.client.validation.Cas20ProxyReceivingTicketValidationFilter;
++import org.apereo.cas.client.validation.Cas30ProxyReceivingTicketValidationFilter;
++import org.apereo.cas.client.validation.Saml11TicketValidationFilter;
+ import org.springframework.beans.factory.ObjectProvider;
+ import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+@@ -251,7 +251,7 @@ public class ShiroCasWebFilterConfiguration extends AbstractShiroWebFilterConfig
+ 
+ 	/*
+ 	 * CAS Assertion Thread Local Filter </br>
+-	 * 该过滤器使得可以通过org.jasig.cas.client.util.AssertionHolder来获取用户的登录名。
++	 * 该过滤器使得可以通过org.apereo.cas.client.util.AssertionHolder来获取用户的登录名。
+ 	 * 比如AssertionHolder.getAssertion().getPrincipal().getName()。
+ 	 * 这个类把Assertion信息放在ThreadLocal变量中，这样应用程序不在web层也能够获取到当前登录信息
+ 	 */
+@@ -309,7 +309,6 @@ public class ShiroCasWebFilterConfiguration extends AbstractShiroWebFilterConfig
+ 	    return registration;
+ 	}
+ 
+-	@Bean
+ 	public Realm casRealm(ObjectProvider<ShiroPrincipalRepository> repositoryProvider,
+ 						  ObjectProvider<AuthorizingRealmListener> realmsListenerProvider) {
+ 
+diff --git a/src/main/java/org/apache/shiro/spring/boot/cas/AntPatternMatcherStrategy.java b/src/main/java/org/apache/shiro/spring/boot/cas/AntPatternMatcherStrategy.java
+index 01e78d9..4fcffff 100644
+--- a/src/main/java/org/apache/shiro/spring/boot/cas/AntPatternMatcherStrategy.java
++++ b/src/main/java/org/apache/shiro/spring/boot/cas/AntPatternMatcherStrategy.java
+@@ -16,8 +16,8 @@
+ package org.apache.shiro.spring.boot.cas;
+ 
+ import org.apache.shiro.util.AntPathMatcher;
+-import org.apache.shiro.util.StringUtils;
+-import org.jasig.cas.client.authentication.UrlPatternMatcherStrategy;
++import org.apache.shiro.lang.util.StringUtils;
++import org.apereo.cas.client.authentication.UrlPatternMatcherStrategy;
+ 
+ public class AntPatternMatcherStrategy implements UrlPatternMatcherStrategy {
+ 
+@@ -27,7 +27,7 @@ public class AntPatternMatcherStrategy implements UrlPatternMatcherStrategy {
+ 	 */
+ 	public static String CONFIG_LOCATION_DELIMITERS = ",; \t\n";
+ 	private final AntPathMatcher matcher = new AntPathMatcher();
+-	private String[] patterns;
++	private String[] patterns = new String[0];
+ 
+ 	@Override
+ 	public boolean matches(String url) {
+@@ -41,7 +41,7 @@ public class AntPatternMatcherStrategy implements UrlPatternMatcherStrategy {
+ 
+ 	@Override
+ 	public void setPattern(String pattern) {
+-		this.patterns = StringUtils.tokenizeToStringArray(pattern, CONFIG_LOCATION_DELIMITERS);
++		this.patterns = StringUtils.hasText(pattern) ? StringUtils.tokenizeToStringArray(pattern, CONFIG_LOCATION_DELIMITERS) : new String[0];
+ 	}
+ 
+ 
+diff --git a/src/main/java/org/apache/shiro/spring/boot/cas/CasClientProperties.java b/src/main/java/org/apache/shiro/spring/boot/cas/CasClientProperties.java
+index 8ea31aa..c812197 100644
+--- a/src/main/java/org/apache/shiro/spring/boot/cas/CasClientProperties.java
++++ b/src/main/java/org/apache/shiro/spring/boot/cas/CasClientProperties.java
+@@ -3,7 +3,7 @@ package org.apache.shiro.spring.boot.cas;
+ import java.util.LinkedHashMap;
+ import java.util.Map;
+ 
+-import org.jasig.cas.client.Protocol;
++import org.apereo.cas.client.Protocol;
+ 
+ public class CasClientProperties{
+ 
+diff --git a/src/main/java/org/apache/shiro/spring/boot/cas/ContainsPatternsUrlPatternMatcherStrategy.java b/src/main/java/org/apache/shiro/spring/boot/cas/ContainsPatternsUrlPatternMatcherStrategy.java
+index f1eb25c..93e3d15 100644
+--- a/src/main/java/org/apache/shiro/spring/boot/cas/ContainsPatternsUrlPatternMatcherStrategy.java
++++ b/src/main/java/org/apache/shiro/spring/boot/cas/ContainsPatternsUrlPatternMatcherStrategy.java
+@@ -15,12 +15,14 @@
+  */
+ package org.apache.shiro.spring.boot.cas;
+ 
+-import org.apache.shiro.spring.boot.utils.StringUtils;
+-import org.jasig.cas.client.authentication.UrlPatternMatcherStrategy;
++import org.apache.shiro.lang.util.StringUtils;
++
++import static org.apache.shiro.spring.boot.utils.StringUtils.CONFIG_LOCATION_DELIMITERS;
++import org.apereo.cas.client.authentication.UrlPatternMatcherStrategy;
+ 
+ public class ContainsPatternsUrlPatternMatcherStrategy implements UrlPatternMatcherStrategy {
+ 
+-    private String[] patterns;
++    private String[] patterns = new String[0];
+ 
+ 	@Override
+ 	public boolean matches(String url) {
+@@ -34,7 +36,7 @@ public class ContainsPatternsUrlPatternMatcherStrategy implements UrlPatternMatc
+ 
+ 	@Override
+ 	public void setPattern(String pattern) {
+-		this.patterns = StringUtils.tokenizeToStringArray(pattern);
++		this.patterns = StringUtils.hasText(pattern) ? StringUtils.tokenizeToStringArray(pattern, CONFIG_LOCATION_DELIMITERS) : new String[0];
+ 	}
+ 
+ }
+diff --git a/src/main/java/org/apache/shiro/spring/boot/cas/filter/CasAuthenticatingFilter.java b/src/main/java/org/apache/shiro/spring/boot/cas/filter/CasAuthenticatingFilter.java
+index 1e6198d..88e4a0d 100644
+--- a/src/main/java/org/apache/shiro/spring/boot/cas/filter/CasAuthenticatingFilter.java
++++ b/src/main/java/org/apache/shiro/spring/boot/cas/filter/CasAuthenticatingFilter.java
+@@ -17,10 +17,10 @@ import org.apache.shiro.spring.boot.cas.token.CasAssertionAuthenticationToken;
+ import org.apache.shiro.spring.boot.utils.RemoteAddrUtils;
+ import org.apache.shiro.subject.Subject;
+ import org.apache.shiro.util.CollectionUtils;
+-import org.apache.shiro.util.StringUtils;
++import org.apache.shiro.lang.util.StringUtils;
+ import org.apache.shiro.web.filter.authc.AuthenticatingFilter;
+ import org.apache.shiro.web.util.WebUtils;
+-import org.jasig.cas.client.Protocol;
++import org.apereo.cas.client.Protocol;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ 
+diff --git a/src/main/java/org/apache/shiro/spring/boot/cas/realm/CasAssertionAuthorizingRealm.java b/src/main/java/org/apache/shiro/spring/boot/cas/realm/CasAssertionAuthorizingRealm.java
+index 41692a2..5f98e8d 100644
+--- a/src/main/java/org/apache/shiro/spring/boot/cas/realm/CasAssertionAuthorizingRealm.java
++++ b/src/main/java/org/apache/shiro/spring/boot/cas/realm/CasAssertionAuthorizingRealm.java
+@@ -28,11 +28,11 @@ import org.apache.shiro.spring.boot.ShiroCasProperties;
+ import org.apache.shiro.spring.boot.cas.exception.CasTicketFoundException;
+ import org.apache.shiro.spring.boot.cas.token.CasAssertionAuthenticationToken;
+ import org.apache.shiro.spring.boot.utils.CasTicketValidatorUtils;
+-import org.apache.shiro.util.StringUtils;
+-import org.jasig.cas.client.authentication.AttributePrincipal;
+-import org.jasig.cas.client.util.AssertionHolder;
+-import org.jasig.cas.client.validation.Assertion;
+-import org.jasig.cas.client.validation.TicketValidator;
++import org.apache.shiro.lang.util.StringUtils;
++import org.apereo.cas.client.authentication.AttributePrincipal;
++import org.apereo.cas.client.util.AssertionHolder;
++import org.apereo.cas.client.validation.Assertion;
++import org.apereo.cas.client.validation.TicketValidator;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ 
+@@ -106,7 +106,9 @@ public class CasAssertionAuthorizingRealm extends AbstractAuthorizingRealm {
+ 
+ 			TicketValidator ticketValidator = ensureTicketValidator();
+ 			// contact CAS server to validate service ticket
+-			Assertion casAssertion = ticketValidator.validate(ticket, casProperties.getServerName());
++			String service = casProperties.getService();
++			Assertion casAssertion = ticketValidator.validate(ticket,
++			        StringUtils.hasText(service) ? service : casProperties.getServerName());
+ 			casToken.setAssertion(casAssertion);
+ 			// get principal, user id and attributes
+ 			AttributePrincipal casPrincipal = casAssertion.getPrincipal();
+diff --git a/src/main/java/org/apache/shiro/spring/boot/cas/realm/CasAssertionSimpleAuthorizingRealm.java b/src/main/java/org/apache/shiro/spring/boot/cas/realm/CasAssertionSimpleAuthorizingRealm.java
+index af90b5c..533a607 100644
+--- a/src/main/java/org/apache/shiro/spring/boot/cas/realm/CasAssertionSimpleAuthorizingRealm.java
++++ b/src/main/java/org/apache/shiro/spring/boot/cas/realm/CasAssertionSimpleAuthorizingRealm.java
+@@ -37,12 +37,12 @@ import org.apache.shiro.spring.boot.utils.CasTicketValidatorUtils;
+ import org.apache.shiro.subject.PrincipalCollection;
+ import org.apache.shiro.subject.SimplePrincipalCollection;
+ import org.apache.shiro.util.CollectionUtils;
+-import org.apache.shiro.util.StringUtils;
+-import org.jasig.cas.client.authentication.AttributePrincipal;
+-import org.jasig.cas.client.util.AssertionHolder;
+-import org.jasig.cas.client.validation.Assertion;
+-import org.jasig.cas.client.validation.TicketValidationException;
+-import org.jasig.cas.client.validation.TicketValidator;
++import org.apache.shiro.lang.util.StringUtils;
++import org.apereo.cas.client.authentication.AttributePrincipal;
++import org.apereo.cas.client.util.AssertionHolder;
++import org.apereo.cas.client.validation.Assertion;
++import org.apereo.cas.client.validation.TicketValidationException;
++import org.apereo.cas.client.validation.TicketValidator;
+ 
+ /**
+  * Cas Stateless AuthorizingRealm
+@@ -118,11 +118,7 @@ public class CasAssertionSimpleAuthorizingRealm extends AbstractAuthorizingRealm
+ 
+      		casToken.setUsername(username);
+             String rememberMeAttributeName = casProperties.getRememberMeAttributeName();
+-            String rememberMeStringValue = (String)attributes.get(rememberMeAttributeName);
+-            boolean isRemembered = rememberMeStringValue != null && Boolean.parseBoolean(rememberMeStringValue);
+-            if (isRemembered) {
+-                casToken.setRememberMe(true);
+-            }
++            casToken.setRememberMe(MapUtils.getBoolean(attributes, rememberMeAttributeName, false));
+             // create simple authentication info
+             List<Object> principals = CollectionUtils.asList(username, attributes);
+             PrincipalCollection principalCollection = new SimplePrincipalCollection(principals, getName());
+@@ -140,7 +136,9 @@ public class CasAssertionSimpleAuthorizingRealm extends AbstractAuthorizingRealm
+         try {
+ 
+             // contact CAS server to validate service ticket
+-            Assertion casAssertion = ticketValidator.validate(ticket, casProperties.getServerName());
++            String service = casProperties.getService();
++            Assertion casAssertion = ticketValidator.validate(ticket,
++                    StringUtils.hasText(service) ? service : casProperties.getServerName());
+             // get principal, user id and attributes
+             AttributePrincipal casPrincipal = casAssertion.getPrincipal();
+             String username = casPrincipal.getName();
+diff --git a/src/main/java/org/apache/shiro/spring/boot/cas/token/CasAssertionAuthenticationToken.java b/src/main/java/org/apache/shiro/spring/boot/cas/token/CasAssertionAuthenticationToken.java
+index efcb1e9..1044b35 100644
+--- a/src/main/java/org/apache/shiro/spring/boot/cas/token/CasAssertionAuthenticationToken.java
++++ b/src/main/java/org/apache/shiro/spring/boot/cas/token/CasAssertionAuthenticationToken.java
+@@ -21,7 +21,7 @@ import org.apache.shiro.biz.authc.token.LoginProtocolAuthenticationToken;
+ import org.apache.shiro.biz.authc.token.LoginType;
+ import org.apache.shiro.biz.authc.token.LoginTypeAuthenticationToken;
+ import org.apache.shiro.biz.authc.token.UsernameWithoutPwdToken;
+-import org.jasig.cas.client.validation.Assertion;
++import org.apereo.cas.client.validation.Assertion;
+ 
+ @SuppressWarnings("serial")
+ public class CasAssertionAuthenticationToken extends UsernameWithoutPwdToken implements LoginTypeAuthenticationToken, LoginProtocolAuthenticationToken {
+diff --git a/src/main/java/org/apache/shiro/spring/boot/utils/CasTicketValidatorUtils.java b/src/main/java/org/apache/shiro/spring/boot/utils/CasTicketValidatorUtils.java
+index f19e66e..36036a5 100644
+--- a/src/main/java/org/apache/shiro/spring/boot/utils/CasTicketValidatorUtils.java
++++ b/src/main/java/org/apache/shiro/spring/boot/utils/CasTicketValidatorUtils.java
+@@ -16,6 +16,7 @@
+ package org.apache.shiro.spring.boot.utils;
+ 
+ 
++import org.springframework.util.StringUtils;
+ import java.io.FileInputStream;
+ import java.io.IOException;
+ import java.util.Properties;
+@@ -24,21 +25,21 @@ import javax.net.ssl.HttpsURLConnection;
+ 
+ import org.apache.shiro.spring.boot.ShiroCasProperties;
+ import org.apache.shiro.spring.boot.cas.exception.CasAuthenticationException;
+-import org.jasig.cas.client.Protocol;
+-import org.jasig.cas.client.proxy.Cas20ProxyRetriever;
+-import org.jasig.cas.client.proxy.ProxyGrantingTicketStorage;
+-import org.jasig.cas.client.proxy.ProxyGrantingTicketStorageImpl;
+-import org.jasig.cas.client.ssl.HttpURLConnectionFactory;
+-import org.jasig.cas.client.ssl.HttpsURLConnectionFactory;
+-import org.jasig.cas.client.util.CommonUtils;
+-import org.jasig.cas.client.util.ReflectUtils;
+-import org.jasig.cas.client.validation.Cas10TicketValidator;
+-import org.jasig.cas.client.validation.Cas20ProxyTicketValidator;
+-import org.jasig.cas.client.validation.Cas20ServiceTicketValidator;
+-import org.jasig.cas.client.validation.Cas30ProxyTicketValidator;
+-import org.jasig.cas.client.validation.Cas30ServiceTicketValidator;
+-import org.jasig.cas.client.validation.Saml11TicketValidator;
+-import org.jasig.cas.client.validation.TicketValidator;
++import org.apereo.cas.client.Protocol;
++import org.apereo.cas.client.proxy.Cas20ProxyRetriever;
++import org.apereo.cas.client.proxy.ProxyGrantingTicketStorage;
++import org.apereo.cas.client.proxy.ProxyGrantingTicketStorageImpl;
++import org.apereo.cas.client.ssl.HttpURLConnectionFactory;
++import org.apereo.cas.client.ssl.HttpsURLConnectionFactory;
++import org.apereo.cas.client.util.CommonUtils;
++import org.apereo.cas.client.util.ReflectUtils;
++import org.apereo.cas.client.validation.Cas10TicketValidator;
++import org.apereo.cas.client.validation.Cas20ProxyTicketValidator;
++import org.apereo.cas.client.validation.Cas20ServiceTicketValidator;
++import org.apereo.cas.client.validation.Cas30ProxyTicketValidator;
++import org.apereo.cas.client.validation.Cas30ServiceTicketValidator;
++import org.apereo.cas.client.validation.Saml11TicketValidator;
++import org.apereo.cas.client.validation.TicketValidator;
+ import org.slf4j.Logger;
+ import org.slf4j.LoggerFactory;
+ 
+diff --git a/src/main/java/org/apache/shiro/spring/boot/utils/CasUrlUtils.java b/src/main/java/org/apache/shiro/spring/boot/utils/CasUrlUtils.java
+index 7e1bb39..7b11798 100644
+--- a/src/main/java/org/apache/shiro/spring/boot/utils/CasUrlUtils.java
++++ b/src/main/java/org/apache/shiro/spring/boot/utils/CasUrlUtils.java
+@@ -15,6 +15,7 @@
+  */
+ package org.apache.shiro.spring.boot.utils;
+ 
++import org.springframework.util.StringUtils;
+ import java.net.MalformedURLException;
+ import java.net.URL;
+ 
+@@ -23,7 +24,7 @@ import jakarta.servlet.ServletResponse;
+ 
+ import org.apache.shiro.spring.boot.cas.CasClientProperties;
+ import org.apache.shiro.web.util.WebUtils;
+-import org.jasig.cas.client.util.CommonUtils;
++import org.apereo.cas.client.util.CommonUtils;
+ 
+ public class CasUrlUtils {
+ 
+@@ -87,7 +88,7 @@ public class CasUrlUtils {
+ 	
+ 	public static String constructServiceUrl(ServletRequest request, ServletResponse response, CasClientProperties casProperties) {
+ 		
+-		return CommonUtils.constructServiceUrl(WebUtils.toHttp(request), WebUtils.toHttp(response), casProperties.getServerName(),
++		return org.apereo.cas.client.util.WebUtils.constructServiceUrl(WebUtils.toHttp(request), WebUtils.toHttp(response), casProperties.getService(),
+ 				casProperties.getServerName(), casProperties.getServiceParameterName(),
+ 				casProperties.getArtifactParameterName(), casProperties.isEncodeServiceUrl());
+ 		
+diff --git a/src/main/java/org/apache/shiro/spring/boot/utils/StringUtils.java b/src/main/java/org/apache/shiro/spring/boot/utils/StringUtils.java
+index bfaf98a..bc6f0b7 100644
+--- a/src/main/java/org/apache/shiro/spring/boot/utils/StringUtils.java
++++ b/src/main/java/org/apache/shiro/spring/boot/utils/StringUtils.java
+@@ -15,7 +15,7 @@
+  */
+ package org.apache.shiro.spring.boot.utils;
+ 
+-public class StringUtils extends org.apache.shiro.util.StringUtils{
++public class StringUtils {
+ 
+ 	/**
+ 	 * Any number of these characters are considered delimiters between multiple
+@@ -24,7 +24,7 @@ public class StringUtils extends org.apache.shiro.util.StringUtils{
+ 	public static String CONFIG_LOCATION_DELIMITERS = ",; \t\n";
+ 	
+ 	public static String[] tokenizeToStringArray(String str) {
+-		return tokenizeToStringArray(str, CONFIG_LOCATION_DELIMITERS);
++		return org.apache.shiro.lang.util.StringUtils.tokenizeToStringArray(str, CONFIG_LOCATION_DELIMITERS);
+ 	}
+ 	
+ }
+diff --git a/src/main/resources/META-INF/spring-autoconfigure-metadata.properties b/src/main/resources/META-INF/spring-autoconfigure-metadata.properties
+index 0969c98..543b44e 100644
+--- a/src/main/resources/META-INF/spring-autoconfigure-metadata.properties
++++ b/src/main/resources/META-INF/spring-autoconfigure-metadata.properties
+@@ -1,2 +1,4 @@
+ org.apache.shiro.spring.boot.ShiroCasWebAutoConfiguration=
+-org.apache.shiro.spring.boot.ShiroCasWebFilterConfiguration=
+\ No newline at end of file
++org.apache.shiro.spring.boot.ShiroCasWebAutoConfiguration.AutoConfigureBefore=org.apache.shiro.spring.config.web.autoconfigure.ShiroWebAutoConfiguration,org.apache.shiro.spring.boot.ShiroBizWebAutoConfiguration
++org.apache.shiro.spring.boot.ShiroCasWebFilterConfiguration=
++org.apache.shiro.spring.boot.ShiroCasWebFilterConfiguration.AutoConfigureBefore=org.apache.shiro.spring.config.web.autoconfigure.ShiroWebFilterConfiguration,org.apache.shiro.spring.boot.ShiroBizWebFilterConfiguration
+diff --git a/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports b/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports
+new file mode 100644
+index 0000000..b1283f7
+--- /dev/null
++++ b/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports
+@@ -0,0 +1,2 @@
++org.apache.shiro.spring.boot.ShiroCasWebAutoConfiguration
++org.apache.shiro.spring.boot.ShiroCasWebFilterConfiguration
+diff --git a/src/test/java/org/apache/shiro/spring/boot/CasClientKeyCompatibilityTest.java b/src/test/java/org/apache/shiro/spring/boot/CasClientKeyCompatibilityTest.java
+index f262c7a..beca48b 100644
+--- a/src/test/java/org/apache/shiro/spring/boot/CasClientKeyCompatibilityTest.java
++++ b/src/test/java/org/apache/shiro/spring/boot/CasClientKeyCompatibilityTest.java
+@@ -9,7 +9,7 @@ import java.security.KeyPairGenerator;
+ import java.security.PrivateKey;
+ 
+ import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
+-import org.jasig.cas.client.util.PrivateKeyUtils;
++import org.apereo.cas.client.util.PrivateKeyUtils;
+ import org.junit.jupiter.api.Test;
+ import org.junit.jupiter.api.io.TempDir;
+ 
+diff --git a/src/test/java/org/apache/shiro/spring/boot/CasJakartaWebRegistrationTest.java b/src/test/java/org/apache/shiro/spring/boot/CasJakartaWebRegistrationTest.java
+new file mode 100644
+index 0000000..1810cc8
+--- /dev/null
++++ b/src/test/java/org/apache/shiro/spring/boot/CasJakartaWebRegistrationTest.java
+@@ -0,0 +1,87 @@
++package org.apache.shiro.spring.boot;
++
++import jakarta.servlet.Filter;
++import org.apereo.cas.client.session.SingleSignOutHttpSessionListener;
++import org.apache.shiro.mgt.SubjectFactory;
++import org.apache.shiro.spring.boot.cas.CasSubjectFactory;
++import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.params.ParameterizedTest;
++import org.junit.jupiter.params.provider.CsvSource;
++import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
++import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
++import org.springframework.boot.web.servlet.FilterRegistrationBean;
++import org.springframework.boot.web.servlet.ServletListenerRegistrationBean;
++import org.springframework.context.annotation.Configuration;
++import org.springframework.mock.web.MockFilterChain;
++import org.springframework.mock.web.MockHttpServletRequest;
++import org.springframework.mock.web.MockHttpServletResponse;
++
++import static org.assertj.core.api.Assertions.assertThat;
++
++class CasJakartaWebRegistrationTest {
++
++    private final WebApplicationContextRunner runner = new WebApplicationContextRunner()
++            .withUserConfiguration(Application.class)
++            .withPropertyValues(
++                    "shiro.cache.type=memory",
++                    "shiro.enabled=true",
++                    "shiro.cas.cas-server-url-prefix=https://cas.example.invalid/cas",
++                    "shiro.cas.cas-server-login-url=https://cas.example.invalid/cas/login",
++                    "shiro.cas.cas-server-logout-url=https://cas.example.invalid/cas/logout",
++                    "shiro.cas.server-name=https://app.example.invalid");
++
++    @ParameterizedTest
++    @CsvSource({
++            "CAS1,Cas10TicketValidationFilter,AuthenticationFilter",
++            "CAS2,Cas20ProxyReceivingTicketValidationFilter,AuthenticationFilter",
++            "CAS3,Cas30ProxyReceivingTicketValidationFilter,AuthenticationFilter",
++            "SAML11,Saml11TicketValidationFilter,Saml11AuthenticationFilter"
++    })
++    void registersTheJakartaFiltersAndListener(String protocol, String validatorType, String authenticationType) {
++        runner.withPropertyValues("shiro.cas.enabled=true", "shiro.cas.protocol=" + protocol)
++                .run(context -> {
++                    assertThat(context).hasNotFailed();
++                    assertThat(context.getBean(SubjectFactory.class)).isInstanceOf(CasSubjectFactory.class);
++                    var validator = context.getBean("ticketValidationFilter", FilterRegistrationBean.class);
++                    assertThat(validator.isEnabled()).isTrue();
++                    assertThat(validator.getFilter().getClass().getSimpleName()).isEqualTo(validatorType);
++                    assertThat(validator.getInitParameters()).containsEntry(
++                            "casServerUrlPrefix", "https://cas.example.invalid/cas");
++                    var authentication = context.getBean("authenticationFilter", FilterRegistrationBean.class);
++                    assertThat(authentication.getFilter().getClass().getSimpleName()).isEqualTo(authenticationType);
++                    assertThat(context.getBean("singleSignOutHttpSessionListener", ServletListenerRegistrationBean.class)
++                            .getListener()).isInstanceOf(SingleSignOutHttpSessionListener.class);
++                });
++    }
++
++    @Test
++    void redirectsToCasOnlyWhenTheShiroLogoutPathIsSelected() {
++        runner.withPropertyValues(
++                        "shiro.cas.enabled=true",
++                        "shiro.cas.protocol=CAS3",
++                        "shiro.filter-chain-definition-map.[/sign-out]=casLogout")
++                .run(context -> {
++                    assertThat(context).hasNotFailed();
++                    assertThat(context.getBean(DefaultWebSecurityManager.class).getSubjectFactory())
++                            .isSameAs(context.getBean(CasSubjectFactory.class));
++                    var logout = context.getBean("casLogout", FilterRegistrationBean.class);
++                    assertThat(logout.isEnabled()).isFalse();
++                    Filter dispatch = context.getBean("filterShiroFilterRegistrationBean", FilterRegistrationBean.class)
++                            .getFilter();
++
++                    var request = new MockHttpServletRequest("GET", "/sign-out");
++                    request.setServletPath("/sign-out");
++                    var response = new MockHttpServletResponse();
++                    dispatch.doFilter(request, response, new MockFilterChain());
++
++                    assertThat(response.getStatus()).isEqualTo(302);
++                    assertThat(response.getRedirectedUrl()).startsWith("https://cas.example.invalid/cas/logout");
++                });
++    }
++
++    @Configuration(proxyBeanMethods = false)
++    @EnableAutoConfiguration
++    static class Application {
++    }
++}
+diff --git a/src/test/java/org/apache/shiro/spring/boot/CasTicketExchangeTest.java b/src/test/java/org/apache/shiro/spring/boot/CasTicketExchangeTest.java
+new file mode 100644
+index 0000000..bd14fdb
+--- /dev/null
++++ b/src/test/java/org/apache/shiro/spring/boot/CasTicketExchangeTest.java
+@@ -0,0 +1,82 @@
++package org.apache.shiro.spring.boot;
++
++import java.net.InetSocketAddress;
++import java.nio.charset.StandardCharsets;
++import java.util.concurrent.atomic.AtomicReference;
++
++import com.sun.net.httpserver.HttpServer;
++import org.apache.shiro.spring.boot.cas.exception.CasAuthenticationException;
++import org.apache.shiro.spring.boot.cas.exception.CasTicketFoundException;
++import org.apache.shiro.spring.boot.cas.realm.CasAssertionSimpleAuthorizingRealm;
++import org.apache.shiro.spring.boot.cas.token.CasAssertionAuthenticationToken;
++import org.apereo.cas.client.Protocol;
++import org.junit.jupiter.params.ParameterizedTest;
++import org.junit.jupiter.params.provider.CsvSource;
++
++import static org.assertj.core.api.Assertions.assertThat;
++import static org.assertj.core.api.Assertions.assertThatThrownBy;
++
++class CasTicketExchangeTest {
++
++    @ParameterizedTest
++    @CsvSource({"CAS2,/cas/serviceValidate", "CAS3,/cas/p3/serviceValidate"})
++    void exchangesAServiceTicketUsingTheConfiguredProtocol(Protocol protocol, String validationRoute) throws Exception {
++        var query = new AtomicReference<String>();
++        var server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
++        server.createContext(validationRoute, exchange -> {
++            try (exchange) {
++                query.set(exchange.getRequestURI().getQuery());
++                String result = query.get().contains("ticket=ST-rejected") ? """
++                        <cas:authenticationFailure code="INVALID_TICKET">Rejected</cas:authenticationFailure>
++                        """ : """
++                        <cas:authenticationSuccess>
++                          <cas:user>test-user</cas:user>
++                          <cas:attributes>
++                            <cas:groups>finance, reports</cas:groups>
++                            <cas:permissions>payroll:read</cas:permissions>
++                          </cas:attributes>
++                        </cas:authenticationSuccess>
++                        """;
++                byte[] payload = """
++                        <cas:serviceResponse xmlns:cas="http://www.yale.edu/tp/cas">
++                        %s
++                        </cas:serviceResponse>
++                        """.formatted(result).getBytes(StandardCharsets.UTF_8);
++                exchange.getResponseHeaders().set("Content-Type", "application/xml; charset=UTF-8");
++                exchange.sendResponseHeaders(200, payload.length);
++                exchange.getResponseBody().write(payload);
++            }
++        });
++        server.start();
++        try {
++            var properties = new ShiroCasProperties();
++            properties.setProtocol(protocol);
++            properties.setCasServerUrlPrefix("http://127.0.0.1:" + server.getAddress().getPort() + "/cas");
++            properties.setEncoding("UTF-8");
++            properties.setServerName("https://app.example.invalid/callback");
++            var realm = new CasAssertionSimpleAuthorizingRealm(properties);
++            realm.setDefaultRoles("employee");
++            realm.setDefaultPermissions("account:read");
++            realm.setRoleAttributeNames("groups");
++            realm.setPermissionAttributeNames("permissions");
++            var login = new CasAssertionAuthenticationToken("ST-test-ticket", "127.0.0.1");
++            var authentication = realm.getAuthenticationInfo(login);
++            assertThat(authentication.getPrincipals().getPrimaryPrincipal()).isEqualTo("test-user");
++            assertThat(query.get()).contains("ticket=ST-test-ticket", "service=https://app.example.invalid/callback");
++            assertThat(realm.hasRole(authentication.getPrincipals(), "employee")).isTrue();
++            assertThat(realm.isPermitted(authentication.getPrincipals(), "account:read")).isTrue();
++            assertThat(realm.isPermitted(authentication.getPrincipals(), "account:write")).isFalse();
++            if (protocol == Protocol.CAS3) {
++                assertThat(realm.hasRole(authentication.getPrincipals(), "reports")).isTrue();
++                assertThat(realm.isPermitted(authentication.getPrincipals(), "payroll:read")).isTrue();
++            }
++
++            assertThatThrownBy(() -> realm.getAuthenticationInfo(new CasAssertionAuthenticationToken(
++                    "ST-rejected", "127.0.0.1"))).isInstanceOf(CasAuthenticationException.class);
++            assertThatThrownBy(() -> realm.getAuthenticationInfo(new CasAssertionAuthenticationToken(
++                    " ", "127.0.0.1"))).isInstanceOf(CasTicketFoundException.class);
++        } finally {
++            server.stop(0);
++        }
++    }
++}
+diff --git a/src/test/java/org/apache/shiro/spring/boot/ShiroCasServletConfigurationTest.java b/src/test/java/org/apache/shiro/spring/boot/ShiroCasServletConfigurationTest.java
+new file mode 100644
+index 0000000..392ceaf
+--- /dev/null
++++ b/src/test/java/org/apache/shiro/spring/boot/ShiroCasServletConfigurationTest.java
+@@ -0,0 +1,105 @@
++package org.apache.shiro.spring.boot;
++
++import java.util.stream.Stream;
++
++import org.apache.shiro.event.EventBus;
++import org.apache.shiro.event.support.DefaultEventBus;
++import org.apache.shiro.mgt.SubjectFactory;
++import org.apache.shiro.spring.boot.cas.CasSubjectFactory;
++import org.apache.shiro.spring.boot.cas.filter.CasLogoutFilter;
++import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
++import org.apereo.cas.client.Protocol;
++import org.apereo.cas.client.configuration.ConfigurationKeys;
++import org.apereo.cas.client.validation.AbstractTicketValidationFilter;
++import org.apereo.cas.client.validation.Cas10TicketValidationFilter;
++import org.apereo.cas.client.validation.Cas20ProxyReceivingTicketValidationFilter;
++import org.apereo.cas.client.validation.Cas30ProxyReceivingTicketValidationFilter;
++import org.apereo.cas.client.validation.Saml11TicketValidationFilter;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.params.ParameterizedTest;
++import org.junit.jupiter.params.provider.Arguments;
++import org.junit.jupiter.params.provider.MethodSource;
++import org.springframework.boot.autoconfigure.AutoConfigurations;
++import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
++import org.springframework.boot.web.servlet.FilterRegistrationBean;
++
++import static org.assertj.core.api.Assertions.assertThat;
++
++class ShiroCasServletConfigurationTest {
++
++    private final WebApplicationContextRunner contextRunner = new WebApplicationContextRunner()
++                .withConfiguration(AutoConfigurations.of(ShiroBizAutoConfiguration.class,
++                        ShiroBizWebAutoConfiguration.class, ShiroBizWebFilterConfiguration.class,
++                        ShiroCasWebAutoConfiguration.class, ShiroCasWebFilterConfiguration.class))
++                .withBean(EventBus.class, DefaultEventBus::new)
++                .withPropertyValues("shiro.enabled=true", "shiro.cas.enabled=true",
++                        "shiro.static-security-manager-enabled=false",
++                        "shiro.cas.cas-server-login-url=https://sso.example.test/login",
++                        "shiro.cas.cas-server-logout-url=https://sso.example.test/logout",
++                        "shiro.cas.cas-server-url-prefix=https://sso.example.test",
++                        "shiro.cas.server-name=https://service.example.test",
++                        "shiro.cas.server-callback-url=/callback",
++                        "shiro.cas.service=https://service.example.test/callback",
++                        "shiro.cas.ticket-validation-filter-url-patterns=/callback",
++                        "shiro.filter-chain-definition-map.[/callback]=cas");
++
++    @ParameterizedTest
++    @MethodSource("protocolFilters")
++    void casAndShiroBizShareOneServletRegistration(Protocol protocol,
++                                                   Class<? extends AbstractTicketValidationFilter> validator) {
++        contextRunner.withPropertyValues("shiro.cas.protocol=" + protocol.name())
++                .run(context -> {
++                    assertThat(context).hasNotFailed();
++                    assertThat(context.getBean(SubjectFactory.class)).isInstanceOf(CasSubjectFactory.class);
++                    FilterRegistrationBean<?> outer = context.getBean("filterShiroFilterRegistrationBean",
++                            FilterRegistrationBean.class);
++                    assertThat(outer.isEnabled()).isTrue();
++                    ShiroFilterFactoryBean factory = context.getBean("&shiroFilterFactoryBean", ShiroFilterFactoryBean.class);
++                    assertThat(factory.getFilterChainDefinitionMap()).containsEntry("/callback", "cas");
++                    assertThat(factory.getFilters()).containsKeys("cas", "casLogout");
++                    FilterRegistrationBean<?> tickets = context.getBean("ticketValidationFilter", FilterRegistrationBean.class);
++                    assertThat(tickets.getFilter()).isExactlyInstanceOf(validator);
++                    assertThat(tickets.getUrlPatterns()).containsExactly("/callback");
++                    assertThat(context.getBean("cas", FilterRegistrationBean.class).isEnabled()).isFalse();
++                });
++    }
++    @Test
++    void appliesCas2ServletOptionsAndKeepsRoamingLogoutLocal() {
++        contextRunner.withPropertyValues("shiro.cas.protocol=CAS2", "shiro.cas.ca-mode=ROAM",
++                        "shiro.login-url=/local-login", "shiro.cas.allowed-proxy-chains=https://service.example.test/proxy",
++                        "shiro.cas.authentication-redirect-strategy-class=org.apereo.cas.client.authentication.DefaultAuthenticationRedirectStrategy",
++                        "shiro.cas.gateway-storage-class=org.apereo.cas.client.authentication.DefaultGatewayResolverImpl",
++                        "shiro.cas.ignore-pattern=/assets/.*", "shiro.cas.ignore-url-pattern-type=REGEX",
++                        "shiro.cas.logout-parameter-name=logoutRequest", "shiro.cas.proxy-receptor-url=/proxy",
++                        "shiro.cas.proxy-callback-url=https://service.example.test/proxy",
++                        "shiro.cas.proxy-granting-ticket-storage-class=org.apereo.cas.client.proxy.ProxyGrantingTicketStorageImpl",
++                        "shiro.cas.relay-state-parameter-name=state", "shiro.cas.role-attribute=groups",
++                        "shiro.cas.ticket-validator-class=org.apereo.cas.client.validation.Cas20ProxyTicketValidator",
++                        "shiro.cas.ssl-config-file=/fixture/tls.properties")
++                .run(context -> {
++                    assertThat(context).hasNotFailed();
++                    FilterRegistrationBean<?> tickets = context.getBean("ticketValidationFilter", FilterRegistrationBean.class);
++                    assertThat(tickets.getInitParameters())
++                            .containsEntry(ConfigurationKeys.ACCEPT_ANY_PROXY.getName(), "false")
++                            .containsEntry(ConfigurationKeys.ALLOWED_PROXY_CHAINS.getName(), "https://service.example.test/proxy")
++                            .containsEntry(ConfigurationKeys.PROXY_RECEPTOR_URL.getName(), "/proxy")
++                            .containsEntry(ConfigurationKeys.RELAY_STATE_PARAMETER_NAME.getName(), "state")
++                            .containsEntry(ConfigurationKeys.ROLE_ATTRIBUTE.getName(), "groups")
++                            .containsEntry(ConfigurationKeys.SSL_CONFIG_FILE.getName(), "/fixture/tls.properties");
++                    FilterRegistrationBean<?> authentication = context.getBean("authenticationFilter", FilterRegistrationBean.class);
++                    assertThat(authentication.getInitParameters())
++                            .containsEntry(ConfigurationKeys.IGNORE_PATTERN.getName(), "/assets/.*")
++                            .containsEntry(ConfigurationKeys.IGNORE_URL_PATTERN_TYPE.getName(), "REGEX");
++                    FilterRegistrationBean<?> logout = context.getBean("casLogout", FilterRegistrationBean.class);
++                    assertThat(((CasLogoutFilter) logout.getFilter()).getRedirectUrl()).isEqualTo("/local-login");
++                });
++    }
++
++    static Stream<Arguments> protocolFilters() {
++        return Stream.of(Arguments.of(Protocol.CAS1, Cas10TicketValidationFilter.class),
++                Arguments.of(Protocol.CAS2, Cas20ProxyReceivingTicketValidationFilter.class),
++                Arguments.of(Protocol.CAS3, Cas30ProxyReceivingTicketValidationFilter.class),
++                Arguments.of(Protocol.SAML11, Saml11TicketValidationFilter.class));
++    }
++
++}
+diff --git a/src/test/java/org/apache/shiro/spring/boot/cas/CasClientPropertiesBindingTest.java b/src/test/java/org/apache/shiro/spring/boot/cas/CasClientPropertiesBindingTest.java
+new file mode 100644
+index 0000000..94d743e
+--- /dev/null
++++ b/src/test/java/org/apache/shiro/spring/boot/cas/CasClientPropertiesBindingTest.java
+@@ -0,0 +1,154 @@
++package org.apache.shiro.spring.boot.cas;
++
++import java.util.Collections;
++import java.util.LinkedHashMap;
++import java.util.Map;
++
++import org.apereo.cas.client.Protocol;
++import org.junit.jupiter.api.Test;
++import org.springframework.boot.context.properties.bind.Binder;
++import org.springframework.boot.context.properties.source.MapConfigurationPropertySource;
++
++import static org.assertj.core.api.Assertions.assertThat;
++
++class CasClientPropertiesBindingTest {
++
++    @Test
++    void bindsServerLocationsAndRedirectPolicyForTheStandaloneClient() {
++        Map<String, String> values = new LinkedHashMap<>();
++        values.put("configuration-strategy", "WEB_XML");
++        values.put("cas-server-login-url", "https://sso.example.test/cas/login");
++        values.put("cas-server-logout-url", "https://sso.example.test/cas/logout");
++        values.put("cas-server-rest-url", "https://sso.example.test/cas/v1/tickets");
++        values.put("cas-server-url-prefix", "https://sso.example.test/cas");
++        values.put("server-callback-url", "/callback");
++        values.put("server-name", "https://service.example.test");
++        values.put("service", "https://service.example.test/callback");
++        values.put("service-parameter-name", "target");
++        values.put("default-error-redirect-page", "/errors/default");
++        values.put("error-redirect", "true");
++        values.put("error-redirect-mappings.[java.io.IOException]", "/errors/unavailable");
++        values.put("error-redirect-filter-url-patterns", "/callback,/validate");
++        values.put("failure-url", "/login-failed");
++        values.put("authentication-redirect-strategy-class", "com.example.RedirectStrategy");
++        values.put("encode-service-url", "false");
++        values.put("gateway", "true");
++        values.put("gateway-storage-class", "com.example.GatewayStorage");
++        values.put("ignore-case", "true");
++        values.put("ignore-pattern", "/public/.*");
++        values.put("ignore-url-pattern-type", "REGEX");
++        values.put("ignore-init-configuration", "true");
++        values.put("redirect-after-validation", "false");
++        values.put("renew", "true");
++
++        CasClientProperties client = bind(values);
++
++        assertThat(client.getConfigurationStrategy()).isEqualTo("WEB_XML");
++        assertThat(client.getCasServerLoginUrl()).isEqualTo("https://sso.example.test/cas/login");
++        assertThat(client.getCasServerLogoutUrl()).isEqualTo("https://sso.example.test/cas/logout");
++        assertThat(client.getCasServerRestUrl()).isEqualTo("https://sso.example.test/cas/v1/tickets");
++        assertThat(client.getCasServerUrlPrefix()).isEqualTo("https://sso.example.test/cas");
++        assertThat(client.getServerCallbackUrl()).isEqualTo("/callback");
++        assertThat(client.getServerName()).isEqualTo("https://service.example.test");
++        assertThat(client.getService()).isEqualTo("https://service.example.test/callback");
++        assertThat(client.getServiceParameterName()).isEqualTo("target");
++        assertThat(client.getDefaultErrorRedirectPage()).isEqualTo("/errors/default");
++        assertThat(client.isErrorRedirect()).isTrue();
++        assertThat(client.getErrorRedirectMappings()).containsExactlyEntriesOf(
++                Collections.singletonMap("java.io.IOException", "/errors/unavailable"));
++        assertThat(client.getErrorRedirectFilterUrlPatterns()).containsExactly("/callback", "/validate");
++        assertThat(client.getFailureUrl()).isEqualTo("/login-failed");
++        assertThat(client.getAuthenticationRedirectStrategyClass()).isEqualTo("com.example.RedirectStrategy");
++        assertThat(client.isEncodeServiceUrl()).isFalse();
++        assertThat(client.isGateway()).isTrue();
++        assertThat(client.getGatewayStorageClass()).isEqualTo("com.example.GatewayStorage");
++        assertThat(client.isIgnoreCase()).isTrue();
++        assertThat(client.getIgnorePattern()).isEqualTo("/public/.*");
++        assertThat(client.getIgnoreUrlPatternType()).isEqualTo("REGEX");
++        assertThat(client.isIgnoreInitConfiguration()).isTrue();
++        assertThat(client.isRedirectAfterValidation()).isFalse();
++        assertThat(client.isRenew()).isTrue();
++    }
++
++    @Test
++    void bindsProtocolProxyAndSessionValidationPolicy() {
++        Map<String, String> values = new LinkedHashMap<>();
++        values.put("protocol", "CAS3");
++        values.put("enabled", "true");
++        values.put("encoding", "ISO-8859-1");
++        values.put("exception-on-validation-failure", "false");
++        values.put("accept-any-proxy", "false");
++        values.put("allowed-proxy-chains", "https://service.example.test/proxy");
++        values.put("artifact-parameter-name", "serviceTicket");
++        values.put("artifact-parameter-over-post", "true");
++        values.put("cipher-algorithm", "AES");
++        values.put("hostname-verifier", "com.example.Verifier");
++        values.put("hostname-verifier-config", "service.example.test");
++        values.put("proxy-callback-url", "https://service.example.test/proxy");
++        values.put("proxy-receptor-url", "/proxy");
++        values.put("proxy-granting-ticket-storage-class", "com.example.ProxyStorage");
++        values.put("ssl-config-file", "/fixtures/cas-tls.properties");
++        values.put("ticket-validator-class", "com.example.Validator");
++        values.put("tolerance", "8000");
++        values.put("eagerly-create-sessions", "false");
++        values.put("use-session", "false");
++        values.put("logout-parameter-name", "logout");
++        values.put("millis-between-clean-ups", "90000");
++        values.put("relay-state-parameter-name", "state");
++        values.put("role-attribute", "groups");
++        values.put("remember-me-attribute-name", "remembered");
++        values.put("secret-key", "fixture-value");
++
++        CasClientProperties client = bind(values);
++
++        assertThat(client.getProtocol()).isEqualTo(Protocol.CAS3);
++        assertThat(client.isEnabled()).isTrue();
++        assertThat(client.getEncoding()).isEqualTo("ISO-8859-1");
++        assertThat(client.isExceptionOnValidationFailure()).isFalse();
++        assertThat(client.isAcceptAnyProxy()).isFalse();
++        assertThat(client.getAllowedProxyChains()).isEqualTo("https://service.example.test/proxy");
++        assertThat(client.getArtifactParameterName()).isEqualTo("serviceTicket");
++        assertThat(client.isArtifactParameterOverPost()).isTrue();
++        assertThat(client.getCipherAlgorithm()).isEqualTo("AES");
++        assertThat(client.getHostnameVerifier()).isEqualTo("com.example.Verifier");
++        assertThat(client.getHostnameVerifierConfig()).isEqualTo("service.example.test");
++        assertThat(client.getProxyCallbackUrl()).isEqualTo("https://service.example.test/proxy");
++        assertThat(client.getProxyReceptorUrl()).isEqualTo("/proxy");
++        assertThat(client.getProxyGrantingTicketStorageClass()).isEqualTo("com.example.ProxyStorage");
++        assertThat(client.getSslConfigFile()).isEqualTo("/fixtures/cas-tls.properties");
++        assertThat(client.getTicketValidatorClass()).isEqualTo("com.example.Validator");
++        assertThat(client.getTolerance()).isEqualTo(8_000L);
++        assertThat(client.isEagerlyCreateSessions()).isFalse();
++        assertThat(client.isUseSession()).isFalse();
++        assertThat(client.getLogoutParameterName()).isEqualTo("logout");
++        assertThat(client.getMillisBetweenCleanUps()).isEqualTo(90_000L);
++        assertThat(client.getRelayStateParameterName()).isEqualTo("state");
++        assertThat(client.getRoleAttribute()).isEqualTo("groups");
++        assertThat(client.getRememberMeAttributeName()).isEqualTo("remembered");
++        assertThat(client.getSecretKey()).isEqualTo("fixture-value");
++    }
++
++    @Test
++    void bindsSeparateServletMappingsForEachFilter() {
++        Map<String, String> values = new LinkedHashMap<>();
++        values.put("assertion-thread-local-filter-url-patterns", "/callback,/assert");
++        values.put("authentication-filter-url-patterns", "/login,/reports/*");
++        values.put("request-wrapper-filter-url-patterns", "/reports/*");
++        values.put("sign-out-filter-url-patterns", "/logout");
++        values.put("ticket-validation-filter-url-patterns", "/callback");
++
++        CasClientProperties client = bind(values);
++
++        assertThat(client.getAssertionThreadLocalFilterUrlPatterns()).containsExactly("/callback", "/assert");
++        assertThat(client.getAuthenticationFilterUrlPatterns()).containsExactly("/login", "/reports/*");
++        assertThat(client.getRequestWrapperFilterUrlPatterns()).containsExactly("/reports/*");
++        assertThat(client.getSignOutFilterUrlPatterns()).containsExactly("/logout");
++        assertThat(client.getTicketValidationFilterUrlPatterns()).containsExactly("/callback");
++    }
++
++    private CasClientProperties bind(Map<String, String> values) {
++        MapConfigurationPropertySource source = new MapConfigurationPropertySource();
++        values.forEach((name, value) -> source.put("cas." + name, value));
++        return new Binder(source).bind("cas", CasClientProperties.class).get();
++    }
++}
+diff --git a/src/test/java/org/apache/shiro/spring/boot/cas/CasRequestPolicyTest.java b/src/test/java/org/apache/shiro/spring/boot/cas/CasRequestPolicyTest.java
+new file mode 100644
+index 0000000..99654a1
+--- /dev/null
++++ b/src/test/java/org/apache/shiro/spring/boot/cas/CasRequestPolicyTest.java
+@@ -0,0 +1,75 @@
++package org.apache.shiro.spring.boot.cas;
++
++import org.apache.shiro.spring.boot.cas.token.CasAssertionAuthenticationToken;
++import org.apache.shiro.subject.SimplePrincipalCollection;
++import org.apache.shiro.subject.Subject;
++import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
++import org.apache.shiro.web.subject.support.DefaultWebSubjectContext;
++import org.apereo.cas.client.authentication.UrlPatternMatcherStrategy;
++import org.junit.jupiter.api.Test;
++import org.springframework.mock.web.MockHttpServletRequest;
++import org.springframework.mock.web.MockHttpServletResponse;
++
++import static org.assertj.core.api.Assertions.assertThat;
++
++class CasRequestPolicyTest {
++
++    @Test
++    void antMatcherAcceptsOnlyConfiguredPaths() {
++        UrlPatternMatcherStrategy matcher = new AntPatternMatcherStrategy();
++        matcher.setPattern("/assets/**; /favicon.ico");
++
++        assertThat(matcher.matches("/assets/css/app.css")).isTrue();
++        assertThat(matcher.matches("/favicon.ico")).isTrue();
++        assertThat(matcher.matches("/reports")).isFalse();
++    }
++
++    @Test
++    void containsMatcherChecksEachConfiguredFragment() {
++        UrlPatternMatcherStrategy matcher = new ContainsPatternsUrlPatternMatcherStrategy();
++        matcher.setPattern("/public/ , /assets/");
++
++        assertThat(matcher.matches("/app/public/status")).isTrue();
++        assertThat(matcher.matches("/app/assets/app.js")).isTrue();
++        assertThat(matcher.matches("/app/reports")).isFalse();
++    }
++
++    @Test
++    void neitherStrategyMatchesWhenPatternsAreAbsent() {
++        UrlPatternMatcherStrategy ant = new AntPatternMatcherStrategy();
++        UrlPatternMatcherStrategy contains = new ContainsPatternsUrlPatternMatcherStrategy();
++
++        assertThat(ant.matches("/reports")).isFalse();
++        assertThat(contains.matches("/reports")).isFalse();
++
++        ant.setPattern(null);
++        contains.setPattern(null);
++        assertThat(ant.matches("/reports")).isFalse();
++        assertThat(contains.matches("/reports")).isFalse();
++    }
++
++    @Test
++    void remembersCasIdentityWithoutTreatingItAsAnInteractiveLogin() {
++        DefaultWebSubjectContext context = new DefaultWebSubjectContext();
++        context.setSecurityManager(new DefaultWebSecurityManager());
++        context.setServletRequest(new MockHttpServletRequest());
++        context.setServletResponse(new MockHttpServletResponse());
++        context.setPrincipals(new SimplePrincipalCollection("auditor", "cas"));
++        CasAssertionAuthenticationToken token = new CasAssertionAuthenticationToken("test-ticket", "127.0.0.1");
++        context.setAuthenticationToken(token);
++        context.setAuthenticated(true);
++        CasSubjectFactory factory = new CasSubjectFactory();
++
++        Subject authenticated = factory.createSubject(context);
++
++        assertThat(authenticated.isAuthenticated()).isTrue();
++        assertThat(authenticated.isRemembered()).isFalse();
++        token.setRememberMe(true);
++
++        Subject remembered = factory.createSubject(context);
++
++        assertThat(remembered.getPrincipal()).isEqualTo("auditor");
++        assertThat(remembered.isAuthenticated()).isFalse();
++        assertThat(remembered.isRemembered()).isTrue();
++    }
++}
+diff --git a/src/test/java/org/apache/shiro/spring/boot/cas/ShiroCasFilterFactoryBeanTest.java b/src/test/java/org/apache/shiro/spring/boot/cas/ShiroCasFilterFactoryBeanTest.java
+new file mode 100644
+index 0000000..a6b1223
+--- /dev/null
++++ b/src/test/java/org/apache/shiro/spring/boot/cas/ShiroCasFilterFactoryBeanTest.java
+@@ -0,0 +1,42 @@
++package org.apache.shiro.spring.boot.cas;
++
++import java.util.Collections;
++import java.util.Map;
++
++import jakarta.servlet.Filter;
++
++import org.apache.shiro.web.filter.AccessControlFilter;
++import org.apache.shiro.web.filter.authc.LogoutFilter;
++import org.junit.jupiter.api.Test;
++import org.springframework.boot.web.servlet.FilterRegistrationBean;
++import org.springframework.context.support.StaticApplicationContext;
++
++import static org.assertj.core.api.Assertions.assertThat;
++import static org.mockito.Mockito.mock;
++
++class ShiroCasFilterFactoryBeanTest {
++
++    @Test
++    void discoversOnlyCompatibleServletFiltersAndPreservesExplicitOverrides() {
++        Filter accessControl = mock(AccessControlFilter.class);
++        Filter logout = new LogoutFilter();
++        Filter explicitOverride = mock(Filter.class);
++        try (StaticApplicationContext context = new StaticApplicationContext()) {
++            context.getBeanFactory().registerSingleton("casAccess", new FilterRegistrationBean<>(accessControl));
++            context.getBeanFactory().registerSingleton("casLogout", new FilterRegistrationBean<>(logout));
++            context.getBeanFactory().registerSingleton("unrelated", new FilterRegistrationBean<>(mock(Filter.class)));
++            context.refresh();
++
++            ShiroCasFilterFactoryBean factory = new ShiroCasFilterFactoryBean();
++            factory.setApplicationContext(context);
++
++            assertThat(factory.getFilters()).containsOnlyKeys("casAccess", "casLogout");
++            assertThat(factory.getFilters().get("casAccess")).isSameAs(accessControl);
++
++            factory.setFilters(Collections.singletonMap("casAccess", explicitOverride));
++            Map<String, Filter> filters = factory.getFilters();
++            assertThat(filters.get("casAccess")).isSameAs(explicitOverride);
++            assertThat(filters.get("casLogout")).isSameAs(logout);
++        }
++    }
++}
+diff --git a/src/test/java/org/apache/shiro/spring/boot/cas/filter/CasAuthenticatingFilterTest.java b/src/test/java/org/apache/shiro/spring/boot/cas/filter/CasAuthenticatingFilterTest.java
+new file mode 100644
+index 0000000..0a89a4b
+--- /dev/null
++++ b/src/test/java/org/apache/shiro/spring/boot/cas/filter/CasAuthenticatingFilterTest.java
+@@ -0,0 +1,164 @@
++package org.apache.shiro.spring.boot.cas.filter;
++
++import java.util.Collections;
++
++import org.apache.shiro.authc.AuthenticationException;
++import org.apache.shiro.authc.AuthenticationToken;
++import org.apache.shiro.biz.authc.AuthenticationFailureHandler;
++import org.apache.shiro.biz.authc.AuthenticationSuccessHandler;
++import org.apache.shiro.biz.authc.token.LoginType;
++import org.apache.shiro.biz.web.filter.authc.listener.LoginListener;
++import org.apache.shiro.spring.boot.cas.token.CasAssertionAuthenticationToken;
++import org.apache.shiro.subject.Subject;
++import org.apache.shiro.subject.support.SubjectThreadState;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.Test;
++import org.mockito.ArgumentCaptor;
++import org.springframework.mock.web.MockFilterChain;
++import org.springframework.mock.web.MockHttpServletRequest;
++import org.springframework.mock.web.MockHttpServletResponse;
++
++import static org.assertj.core.api.Assertions.assertThat;
++import static org.mockito.ArgumentMatchers.any;
++import static org.mockito.ArgumentMatchers.same;
++import static org.mockito.Mockito.doThrow;
++import static org.mockito.Mockito.mock;
++import static org.mockito.Mockito.verify;
++import static org.mockito.Mockito.when;
++
++class CasAuthenticatingFilterTest {
++
++    private final CasAuthenticatingFilter filter = new CasAuthenticatingFilter();
++    private final Subject subject = mock(Subject.class);
++    private final LoginListener listener = mock(LoginListener.class);
++    private final MockHttpServletRequest request = new MockHttpServletRequest("GET", "/callback");
++    private final MockHttpServletResponse response = new MockHttpServletResponse();
++    private final MockFilterChain chain = new MockFilterChain();
++
++    @BeforeEach
++    void configureCallback() {
++        filter.processPathConfig("/callback", null);
++        filter.setSuccessUrl("/home");
++        filter.setFailureUrl("/login-error");
++        filter.setLoginListeners(Collections.singletonList(listener));
++        request.setServletPath("/callback");
++        request.setRemoteAddr("localhost");
++        request.setRemoteUser("auditor");
++    }
++
++    @Test
++    void successfulTicketCallsTheListenerAndRedirectsToTheConfiguredPage() throws Exception {
++        request.setParameter("ticket", "test-ticket");
++
++        dispatch();
++
++        CasAssertionAuthenticationToken token = captureSubmittedToken();
++        assertThat(token.getTicket()).isEqualTo("test-ticket");
++        assertThat(token.getCredentials()).isEqualTo("test-ticket");
++        assertThat(token.getPrincipal()).isEqualTo("auditor");
++        assertThat(token.getHost()).isEqualTo("127.0.0.1");
++        assertThat(token.getLoginType()).isEqualTo(LoginType.CAS);
++        verify(listener).onSuccess(token, subject, request, response);
++        assertThat(response.getRedirectedUrl()).isEqualTo("/home");
++        assertThat(chain.getRequest()).isNull();
++    }
++
++    @Test
++    void successfulTicketUsesTheMatchingApplicationHandler() throws Exception {
++        AuthenticationSuccessHandler handler = mock(AuthenticationSuccessHandler.class);
++        when(handler.supports(any(AuthenticationToken.class))).thenReturn(true);
++        filter.setSuccessHandlers(Collections.singletonList(handler));
++        request.setParameter("ticket", "test-ticket");
++
++        dispatch();
++
++        CasAssertionAuthenticationToken token = captureSubmittedToken();
++        verify(handler).onAuthenticationSuccess(token, request, response, subject);
++        assertThat(response.getRedirectedUrl()).isNull();
++    }
++
++    @Test
++    void successfulTicketKeepsTheRedirectWhenNoHandlerSupportsTheToken() throws Exception {
++        AuthenticationSuccessHandler handler = mock(AuthenticationSuccessHandler.class);
++        filter.setSuccessHandlers(Collections.singletonList(handler));
++        request.setParameter("ticket", "test-ticket");
++
++        dispatch();
++
++        CasAssertionAuthenticationToken token = captureSubmittedToken();
++        verify(handler).supports(token);
++        assertThat(response.getRedirectedUrl()).isEqualTo("/home");
++        assertThat(chain.getRequest()).isNull();
++    }
++
++    @Test
++    void failedTicketUsesTheMatchingApplicationHandler() throws Exception {
++        AuthenticationFailureHandler handler = mock(AuthenticationFailureHandler.class);
++        AuthenticationException failure = new AuthenticationException("fixture rejection");
++        when(handler.supports(failure)).thenReturn(true);
++        doThrow(failure).when(subject).login(any(AuthenticationToken.class));
++        filter.setFailureHandlers(Collections.singletonList(handler));
++
++        dispatch();
++
++        verify(handler).onAuthenticationFailure(any(AuthenticationToken.class), same(request), same(response), same(failure));
++        verify(listener).onFailure(any(AuthenticationToken.class), same(failure), same(request), same(response));
++        assertThat(response.getRedirectedUrl()).isNull();
++        assertThat(chain.getRequest()).isNull();
++    }
++
++    @Test
++    void failedTicketFallsBackToTheConfiguredErrorPageWithoutAHandler() throws Exception {
++        doThrow(new AuthenticationException("fixture rejection")).when(subject).login(any(AuthenticationToken.class));
++
++        dispatch();
++
++        assertThat(response.getRedirectedUrl()).isEqualTo("/login-error");
++        assertThat(chain.getRequest()).isNull();
++    }
++
++    @Test
++    void userWithAnEstablishedSessionReturnsHomeWhenNoFailureHandlerSupportsTheError() throws Exception {
++        AuthenticationFailureHandler handler = mock(AuthenticationFailureHandler.class);
++        AuthenticationException failure = new AuthenticationException("fixture rejection");
++        doThrow(failure).when(subject).login(any(AuthenticationToken.class));
++        when(subject.isAuthenticated()).thenReturn(true);
++        filter.setFailureHandlers(Collections.singletonList(handler));
++
++        dispatch();
++
++        verify(handler).supports(failure);
++        assertThat(response.getRedirectedUrl()).isEqualTo("/home");
++        assertThat(chain.getRequest()).isNull();
++    }
++
++    @Test
++    void unauthenticatedCallbackReturnsToTheErrorPageWhenNoHandlerSupportsTheError() throws Exception {
++        AuthenticationFailureHandler handler = mock(AuthenticationFailureHandler.class);
++        AuthenticationException failure = new AuthenticationException("fixture rejection");
++        doThrow(failure).when(subject).login(any(AuthenticationToken.class));
++        filter.setFailureHandlers(Collections.singletonList(handler));
++
++        dispatch();
++
++        verify(handler).supports(failure);
++        assertThat(response.getRedirectedUrl()).isEqualTo("/login-error");
++        assertThat(chain.getRequest()).isNull();
++    }
++
++    private CasAssertionAuthenticationToken captureSubmittedToken() {
++        ArgumentCaptor<AuthenticationToken> captor = ArgumentCaptor.forClass(AuthenticationToken.class);
++        verify(subject).login(captor.capture());
++        return (CasAssertionAuthenticationToken) captor.getValue();
++    }
++
++    private void dispatch() throws Exception {
++        SubjectThreadState state = new SubjectThreadState(subject);
++        state.bind();
++        try {
++            filter.doFilter(request, response, chain);
++        } finally {
++            state.restore();
++        }
++    }
++}
+diff --git a/src/test/java/org/apache/shiro/spring/boot/cas/realm/CasAssertionRealmTest.java b/src/test/java/org/apache/shiro/spring/boot/cas/realm/CasAssertionRealmTest.java
+new file mode 100644
+index 0000000..6e4afce
+--- /dev/null
++++ b/src/test/java/org/apache/shiro/spring/boot/cas/realm/CasAssertionRealmTest.java
+@@ -0,0 +1,153 @@
++package org.apache.shiro.spring.boot.cas.realm;
++
++import java.util.HashMap;
++import java.util.Map;
++
++import org.apache.shiro.authc.AuthenticationException;
++import org.apache.shiro.authc.AuthenticationInfo;
++import org.apache.shiro.authc.SimpleAuthenticationInfo;
++import org.apache.shiro.biz.authz.principal.ShiroPrincipalRepository;
++import org.apache.shiro.spring.boot.ShiroCasProperties;
++import org.apache.shiro.spring.boot.cas.exception.CasTicketFoundException;
++import org.apache.shiro.spring.boot.cas.token.CasAssertionAuthenticationToken;
++import org.apache.shiro.subject.PrincipalCollection;
++import org.apereo.cas.client.authentication.AttributePrincipalImpl;
++import org.apereo.cas.client.util.AssertionHolder;
++import org.apereo.cas.client.validation.Assertion;
++import org.apereo.cas.client.validation.AssertionImpl;
++import org.apereo.cas.client.validation.TicketValidationException;
++import org.apereo.cas.client.validation.TicketValidator;
++import org.junit.jupiter.api.AfterEach;
++import org.junit.jupiter.api.BeforeEach;
++import org.junit.jupiter.api.Test;
++
++import static org.assertj.core.api.Assertions.assertThat;
++import static org.assertj.core.api.Assertions.assertThatThrownBy;
++import static org.mockito.Mockito.mock;
++import static org.mockito.Mockito.verify;
++import static org.mockito.Mockito.verifyNoInteractions;
++import static org.mockito.Mockito.when;
++
++class CasAssertionRealmTest {
++
++    private static final String SERVICE = "https://service.example.test/cas/callback";
++    private static final String SERVER = "https://service.example.test";
++    private static final String TICKET = "test-ticket";
++
++    private final ShiroCasProperties properties = new ShiroCasProperties();
++    private final TicketValidator validator = mock(TicketValidator.class);
++    private final CasAssertionSimpleAuthorizingRealm simpleRealm = new CasAssertionSimpleAuthorizingRealm(properties) {
++        @Override
++        protected TicketValidator ensureTicketValidator() {
++            return validator;
++        }
++    };
++    private final CasAssertionAuthorizingRealm repositoryRealm = new CasAssertionAuthorizingRealm(properties) {
++        @Override
++        protected TicketValidator ensureTicketValidator() {
++            return validator;
++        }
++    };
++
++    @BeforeEach
++    void configureProperties() {
++        properties.setServerName(SERVER);
++        properties.setService(SERVICE);
++    }
++
++    @AfterEach
++    void clearAssertion() {
++        AssertionHolder.clear();
++    }
++
++    @Test
++    void bothRealmsValidateAgainstTheExplicitService() throws Exception {
++        Assertion assertion = assertionWithPermissions();
++        when(validator.validate(TICKET, SERVICE)).thenReturn(assertion);
++        CasAssertionAuthenticationToken simpleToken = token(TICKET);
++        AuthenticationInfo simpleInfo = simpleRealm.doGetAuthenticationInfo(simpleToken);
++        assertThat(simpleInfo.getPrincipals().getPrimaryPrincipal()).isEqualTo("auditor");
++        assertThat(simpleToken.isRememberMe()).isTrue();
++
++        ShiroPrincipalRepository repository = mock(ShiroPrincipalRepository.class);
++        repositoryRealm.setRepository(repository);
++        CasAssertionAuthenticationToken repositoryToken = token(TICKET);
++        AuthenticationInfo expected = new SimpleAuthenticationInfo("auditor", TICKET, "repository");
++        when(repository.getAuthenticationInfo(repositoryToken)).thenReturn(expected);
++
++        assertThat(repositoryRealm.doGetAuthenticationInfo(repositoryToken)).isSameAs(expected);
++        assertThat(repositoryToken.getAssertion()).isSameAs(assertion);
++        assertThat(repositoryToken.isRememberMe()).isTrue();
++        verify(repository).getAuthenticationInfo(repositoryToken);
++    }
++
++    @Test
++    void simpleRealmReadsBooleanRememberMeAndMapsVerifiedAssertionPermissions() {
++        AssertionHolder.setAssertion(assertionWithPermissions());
++        simpleRealm.setDefaultRoles("employee, ");
++        simpleRealm.setDefaultPermissions("account:read");
++        simpleRealm.setRoleAttributeNames("groups, missing");
++        simpleRealm.setPermissionAttributeNames("permissions, missing");
++        CasAssertionAuthenticationToken token = token(null);
++
++        PrincipalCollection principals = simpleRealm.doGetAuthenticationInfo(token).getPrincipals();
++
++        assertThat(principals.getPrimaryPrincipal()).isEqualTo("auditor");
++        assertThat(token.isRememberMe()).isTrue();
++        assertThat(simpleRealm.hasRole(principals, "employee")).isTrue();
++        assertThat(simpleRealm.hasRole(principals, "finance")).isTrue();
++        assertThat(simpleRealm.isPermitted(principals, "account:read")).isTrue();
++        assertThat(simpleRealm.isPermitted(principals, "reports:read")).isTrue();
++        assertThat(simpleRealm.isPermitted(principals, "reports:write")).isFalse();
++        verifyNoInteractions(validator);
++    }
++
++    @Test
++    void repositoryRealmUsesTheVerifiedServletAssertionWithoutRevalidatingATicket() {
++        Assertion assertion = assertionWithPermissions();
++        AssertionHolder.setAssertion(assertion);
++        ShiroPrincipalRepository repository = mock(ShiroPrincipalRepository.class);
++        repositoryRealm.setRepository(repository);
++        CasAssertionAuthenticationToken token = token(null);
++        AuthenticationInfo expected = new SimpleAuthenticationInfo("auditor", null, "repository");
++        when(repository.getAuthenticationInfo(token)).thenReturn(expected);
++
++        assertThat(repositoryRealm.doGetAuthenticationInfo(token)).isSameAs(expected);
++        assertThat(token.getAssertion()).isSameAs(assertion);
++        assertThat(token.getPrincipal()).isEqualTo("auditor");
++        assertThat(token.isRememberMe()).isTrue();
++        verify(repository).getAuthenticationInfo(token);
++        verifyNoInteractions(validator);
++    }
++
++    @Test
++    void missingTicketFailsBeforeContactingTheValidator() {
++        assertThatThrownBy(() -> simpleRealm.doGetAuthenticationInfo(token(null))).isInstanceOf(CasTicketFoundException.class);
++        assertThatThrownBy(() -> repositoryRealm.doGetAuthenticationInfo(token(null))).isInstanceOf(CasTicketFoundException.class);
++        verifyNoInteractions(validator);
++    }
++
++    @Test
++    void retainsTheValidationFailureWhenOnlyServerNameIsConfigured() throws Exception {
++        properties.setService(null);
++        TicketValidationException rejection = new TicketValidationException("fixture rejection");
++        when(validator.validate(TICKET, SERVER)).thenThrow(rejection);
++
++        assertThatThrownBy(() -> simpleRealm.doGetAuthenticationInfo(token(TICKET)))
++                .isInstanceOf(AuthenticationException.class).hasCause(rejection);
++        assertThatThrownBy(() -> repositoryRealm.doGetAuthenticationInfo(token(TICKET)))
++                .isInstanceOf(AuthenticationException.class).hasCause(rejection);
++    }
++
++    private CasAssertionAuthenticationToken token(String ticket) {
++        return new CasAssertionAuthenticationToken(ticket, "127.0.0.1");
++    }
++
++    private Assertion assertionWithPermissions() {
++        Map<String, Object> attributes = new HashMap<>();
++        attributes.put(properties.getRememberMeAttributeName(), Boolean.TRUE);
++        attributes.put("groups", "finance, auditors");
++        attributes.put("permissions", "reports:read");
++        return new AssertionImpl(new AttributePrincipalImpl("auditor", attributes));
++    }
++}
+diff --git a/src/test/java/org/apache/shiro/spring/boot/utils/CasClientIntegrationTest.java b/src/test/java/org/apache/shiro/spring/boot/utils/CasClientIntegrationTest.java
+new file mode 100644
+index 0000000..b08b812
+--- /dev/null
++++ b/src/test/java/org/apache/shiro/spring/boot/utils/CasClientIntegrationTest.java
+@@ -0,0 +1,98 @@
++package org.apache.shiro.spring.boot.utils;
++
++import java.net.URI;
++import java.net.URLDecoder;
++import java.nio.charset.StandardCharsets;
++import java.nio.file.Files;
++import java.nio.file.Path;
++import java.util.Collections;
++import java.util.stream.Stream;
++
++import org.apache.shiro.spring.boot.ShiroCasProperties;
++import org.apache.shiro.spring.boot.cas.CasClientProperties;
++import org.apereo.cas.client.Protocol;
++import org.apereo.cas.client.validation.Cas10TicketValidator;
++import org.apereo.cas.client.validation.Cas20ProxyTicketValidator;
++import org.apereo.cas.client.validation.Cas20ServiceTicketValidator;
++import org.apereo.cas.client.validation.Cas30ProxyTicketValidator;
++import org.apereo.cas.client.validation.Cas30ServiceTicketValidator;
++import org.apereo.cas.client.validation.Saml11TicketValidator;
++import org.apereo.cas.client.validation.TicketValidator;
++import org.junit.jupiter.api.Test;
++import org.junit.jupiter.api.io.TempDir;
++import org.junit.jupiter.params.ParameterizedTest;
++import org.junit.jupiter.params.provider.Arguments;
++import org.junit.jupiter.params.provider.MethodSource;
++import org.springframework.mock.web.MockHttpServletRequest;
++import org.springframework.mock.web.MockHttpServletResponse;
++
++import static org.assertj.core.api.Assertions.assertThat;
++
++class CasClientIntegrationTest {
++
++    @ParameterizedTest
++    @MethodSource("validators")
++    void selectsTheValidatorForEachSupportedProtocol(Protocol protocol, boolean proxy,
++                                                      Class<? extends TicketValidator> expected) {
++        ShiroCasProperties properties = new ShiroCasProperties();
++        properties.setCasServerUrlPrefix("https://sso.example.test/cas");
++        properties.setProtocol(protocol);
++        if (proxy) {
++            properties.setAllowedProxyChains("https://service.example.test/proxy");
++        }
++
++        assertThat(CasTicketValidatorUtils.createTicketValidator(properties)).isExactlyInstanceOf(expected);
++    }
++
++    static Stream<Arguments> validators() {
++        return Stream.of(Arguments.of(Protocol.CAS1, false, Cas10TicketValidator.class),
++                Arguments.of(Protocol.CAS2, false, Cas20ServiceTicketValidator.class),
++                Arguments.of(Protocol.CAS2, true, Cas20ProxyTicketValidator.class),
++                Arguments.of(Protocol.CAS3, false, Cas30ServiceTicketValidator.class),
++                Arguments.of(Protocol.CAS3, true, Cas30ProxyTicketValidator.class),
++                Arguments.of(Protocol.SAML11, false, Saml11TicketValidator.class));
++    }
++
++    @Test
++    void loadsSslPropertiesFromTheConfiguredFile(@TempDir Path folder) throws Exception {
++        Path propertiesFile = folder.resolve("tls.properties");
++        Files.write(propertiesFile, Collections.singletonList("protocol=TLSv1.2"), StandardCharsets.US_ASCII);
++        ShiroCasProperties properties = new ShiroCasProperties();
++        properties.setSslConfigFile(propertiesFile.toString());
++
++        assertThat(CasTicketValidatorUtils.getSSLConfig(properties).getProperty("protocol")).isEqualTo("TLSv1.2");
++    }
++
++    @Test
++    void explicitServiceUrlTakesPrecedenceOverServerName() {
++        CasClientProperties properties = new CasClientProperties();
++        properties.setServerName("https://gateway.example.test");
++        properties.setService("https://client.example.test/cas/callback");
++        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/reports");
++        MockHttpServletResponse response = new MockHttpServletResponse();
++
++        assertThat(CasUrlUtils.constructServiceUrl(request, response, properties))
++                .isEqualTo("https://client.example.test/cas/callback");
++    }
++
++    @Test
++    void constructsLoginAndLogoutRedirectsWithTheApplicationCallback() throws Exception {
++        CasClientProperties properties = new CasClientProperties();
++        properties.setServerName("https://client.example.test:8443");
++        properties.setCasServerUrlPrefix("https://sso.example.test/cas");
++        properties.setCasServerLoginUrl("https://sso.example.test/cas/login");
++        properties.setCasServerLogoutUrl("https://sso.example.test/cas/logout");
++
++        URI login = URI.create(CasUrlUtils.constructLoginRedirectUrl(properties, "/app/", "/callback"));
++        URI logout = URI.create(CasUrlUtils.constructLogoutRedirectUrl(properties, "/app", "/signed-out"));
++
++        assertThat(login.getPath()).isEqualTo("/cas/login");
++        assertThat(URLDecoder.decode(login.getRawQuery(), "UTF-8"))
++                .contains("service=https://client.example.test:8443/app/callback");
++        assertThat(logout.getPath()).isEqualTo("/cas/logout");
++        assertThat(URLDecoder.decode(logout.getRawQuery(), "UTF-8"))
++                .contains("service=https://client.example.test:8443/app/signed-out");
++        assertThat(CasUrlUtils.constructCallbackUrl("/", "/callback")).isEqualTo("/callback");
++        assertThat(CasUrlUtils.constructRedirectUrl(properties, "login", "/app", "/callback")).isEqualTo(login.toString());
++    }
++}
