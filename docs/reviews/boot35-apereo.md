@@ -23,3 +23,11 @@
 CAS 4.0.4 默认解析 Nimbus JOSE JWT 9.37.3。候选锁定修复版 9.37.4，OSV 对 84 个实际解析的运行依赖报告 3 个不同的公告 ID，涉及 Shiro 2.2.1 和 Spring MVC 6.2.19。 [Nimbus 公告](https://github.com/advisories/GHSA-xwmg-2g98-w7v9)
 
 `ShiroCasProperties` 的协议类型与 `CasAssertionAuthenticationToken` 的断言类型从 `org.jasig.cas.client` 迁移到 `org.apereo.cas.client`。CAS 自动配置类的父类与继承成员也会改变。维护分支采用该 API 之前需确认迁移范围。Issue #4 仍开放。
+
+## Shiro 3.0.2 联调候选
+
+在相同 Java 17 和 Apereo 4.0.4 的临时副本中切换到 Shiro 3.0.2，并使用已适配的 Shiro 扩展和 Biz starter。原 CAS 代码会把 PrincipalCollection 强制转换为 SimplePrincipalCollection。Shiro 3 返回 ImmutablePrincipalCollection，导致 CAS2、CAS3 票据交换后的授权和 Realm 授权共 3 项测试报错。
+
+复用 Boot 4.1 的实现，通过 `PrincipalCollection.fromRealm(getName())` 获取当前 CAS Realm 的属性，并用接口访问属性 Principal。应用此改动后，`clean verify` 的 42 项通过，0 跳过，包含 CAS2/CAS3 回环票据交换与断言授权。[Boot 4.1 Realm 实现](https://github.com/easy-4-java/shiro-cas-spring-boot-starter/blob/7792d59/src/main/java/org/apache/shiro/spring/boot/cas/realm/CasAssertionSimpleAuthorizingRealm.java) · [Shiro 扩展与 Biz starter 联调记录](https://github.com/easy-4-java/shiro-pac4j-spring-boot-starter/blob/698bec71a6720b1e01d32aa5a581d96babdbb343/docs/reviews/issue-3-boot35-shiro3.md)
+
+候选组合解析出 86 个唯一 runtime Maven 坐标。OSV 只命中 `spring-webmvc:6.2.19` 的两条公告，厂商将 6.2.x 的修复版本 6.2.20 列为企业支持版本。此联调结果用于评审，仍需确认 Apereo 公共类型迁移与启用的缓存提供者验收范围。[CVE-2026-47884](https://spring.io/security/cve-2026-47884/) · [CVE-2026-47890](https://spring.io/security/cve-2026-47890/)
