@@ -5,9 +5,11 @@ on:
     branches:
       - feature/REQ-20261119-wandl-shiro-cas-41-jakarta
       - test/20261119
+      - 4.1.x
   pull_request:
     branches:
       - test/20261119
+      - 4.1.x
 
 permissions:
   contents: read
