@@ -37,7 +37,7 @@ import org.apache.shiro.spring.boot.utils.CasTicketValidatorUtils;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.util.CollectionUtils;
-import org.apache.shiro.util.StringUtils;
+import org.apache.shiro.lang.util.StringUtils;
 import org.apereo.cas.client.authentication.AttributePrincipal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -204,9 +204,12 @@ public class CasAssertionSimpleAuthorizingRealm extends AbstractAuthorizingRealm
     @SuppressWarnings("unchecked")
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
         // retrieve user information
-        SimplePrincipalCollection principalCollection = (SimplePrincipalCollection) principals;
-        List<Object> listPrincipals = principalCollection.asList();
-        Map<String, String> attributes = (Map<String, String>) listPrincipals.get(1);
+        var realmPrincipals = principals.fromRealm(getName());
+        var attributePrincipal = realmPrincipals.stream().filter(Map.class::isInstance).findFirst();
+        if (attributePrincipal.isEmpty()) {
+            return null;
+        }
+        Map<String, String> attributes = (Map<String, String>) attributePrincipal.get();
         // create simple authorization info
         SimpleAuthorizationInfo simpleAuthorizationInfo = new SimpleAuthorizationInfo();
         // add default roles

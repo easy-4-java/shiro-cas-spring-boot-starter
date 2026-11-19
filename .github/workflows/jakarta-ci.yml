@@ -1,0 +1,21 @@
+name: Shiro Jakarta CI
+
+on:
+  push:
+    branches:
+      - feature/REQ-20261119-wandl-shiro-cas-41-jakarta
+      - test/20261119
+      - 4.1.x
+  pull_request:
+    branches:
+      - test/20261119
+      - 4.1.x
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    uses: easy-4-java/shiro-extension-spring-boot-starter/.github/workflows/jakarta-ci.yml@f90417e4a6909fae94dbeb81d8accbd85d6b0104
+    secrets:
+      MAVEN_SETTINGS_XML: ${{ secrets.MAVEN_SETTINGS_XML }}
