@@ -19,18 +19,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.annotation.Configuration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class ShiroCasServletConfigurationTest {
 
     private final WebApplicationContextRunner contextRunner = new WebApplicationContextRunner()
-                .withConfiguration(AutoConfigurations.of(ShiroBizAutoConfiguration.class,
-                        ShiroBizWebAutoConfiguration.class, ShiroBizWebFilterConfiguration.class,
-                        ShiroCasWebAutoConfiguration.class, ShiroCasWebFilterConfiguration.class))
+                .withUserConfiguration(Application.class)
                 .withBean(EventBus.class, DefaultEventBus::new)
                 .withPropertyValues("shiro.enabled=true", "shiro.cas.enabled=true",
                         "shiro.static-security-manager-enabled=false",
@@ -100,6 +99,11 @@ class ShiroCasServletConfigurationTest {
                 Arguments.of(Protocol.CAS2, Cas20ProxyReceivingTicketValidationFilter.class),
                 Arguments.of(Protocol.CAS3, Cas30ProxyReceivingTicketValidationFilter.class),
                 Arguments.of(Protocol.SAML11, Saml11TicketValidationFilter.class));
+    }
+
+    @Configuration(proxyBeanMethods = false)
+    @EnableAutoConfiguration
+    static class Application {
     }
 
 }
